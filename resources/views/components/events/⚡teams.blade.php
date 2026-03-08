@@ -3,8 +3,10 @@
 use Livewire\Component;
 use App\Models\Event;
 use Livewire\WithFileUploads;
+use App\Livewire\Concerns\HasSileoToasts;
 
 new class extends Component {
+    use HasSileoToasts;
     use WithFileUploads;
     public Event $event;
     public $teams = [];
@@ -24,11 +26,13 @@ new class extends Component {
     {
         $this->event = $event;
         $this->getEventTeams(); // Load teams when the component mounts
+        
     }
 
     public function getEventTeams()
     {
         $this->teams = $this->event->teams()->get();
+        $this->dispatch('refresh-leaderboard');
     }
 
     public function openTeamModal()
@@ -58,7 +62,7 @@ new class extends Component {
             'name' => 'required|string|max:255',
             'color' => 'required|string|max:7',
             'represents' => 'nullable|string|max:255',
-            'avatar' => 'nullable|image|max:1024', // Max 1MB
+            'avatar' => 'nullable|image|max:2048', // Max 2MB
         ]);
 
         $data = [
@@ -88,10 +92,14 @@ new class extends Component {
             $this->closeTeamModal();
         }
 
-        $this->dispatch('toast', [
-            'type' => 'success',
-            'message' => $this->isEditingTeam ? 'Team updated.' : 'Team created.',
-        ]);
+        $this->toastSuccess('Success!', $this->isEditingTeam ? 'Team updated Successfully.' : 'Team created Successfully.');
+
+        
+
+        // $this->dispatch('toast', [
+        //     'type' => 'success',
+        //     'message' => $this->isEditingTeam ? 'Team updated.' : 'Team created.',
+        // ]);
     }
     
     public function editTeam($teamId)
@@ -168,7 +176,7 @@ new class extends Component {
                 <flux:table.columns> 
                     <flux:table.column>Avatar</flux:table.column>
                     <flux:table.column>Team Name</flux:table.column>
-                    <flux:table.column>Global ID</flux:table.column>
+                    {{-- <flux:table.column>Global ID</flux:table.column> --}}
                     <flux:table.column></flux:table.column>
                 </flux:table.columns>
                 <flux:table.rows>
@@ -178,7 +186,7 @@ new class extends Component {
                             <flux:table.cell font="medium">
                                 <flux:badge style="background-color: {{ $team->color }};" >{{ $team->name }}</flux:badge>
                             </flux:table.cell>
-                            <flux:table.cell>{{ $team->id }}</flux:table.cell>
+                            {{-- <flux:table.cell>{{ $team->id }}</flux:table.cell> --}}
                             <flux:table.cell>
                                 <flux:button 
                                     wire:click="editTeam('{{ $team->id }}')"

@@ -27,7 +27,17 @@ new class extends Component
 
     public function getEventComps()
     {
-        $this->competitions = $this->event->competitions()->get();
+        $this->competitions = $this->event->competitions()
+        ->with(['results.team']) // Eager load to avoid N+1 issues
+        ->get()
+        ->map(function ($comp) {
+            // Find the result with the highest score for this specific competition
+            $winnerResult = $comp->results()->orderByDesc('score')->first();
+            $comp->winner_name = $winnerResult ? $winnerResult->team->name : 'No winner yet';
+            $comp->winner_color = $winnerResult ? $winnerResult->team->color : null;
+            return $comp;
+        });
+        $this->dispatch('refresh-leaderboard');
     }
 
     public function openCompModal()
@@ -132,6 +142,7 @@ new class extends Component
                 <flux:table.columns>
                     <flux:table.column>Activity</flux:table.column>
                     <flux:table.column>Category</flux:table.column>
+                    <flux:table.column>Winner</flux:table.column>
                     <flux:table.column></flux:table.column>
                 </flux:table.columns>
                 <flux:table.rows>
@@ -139,6 +150,16 @@ new class extends Component
                         <flux:table.row wire:key="comp-{{ $comp->id }}">
                             <flux:table.cell font="medium">{{ $comp->name }}</flux:table.cell>
                             <flux:table.cell>{{ $comp->category }}</flux:table.cell>
+                            <flux:table.cell>
+                                @if($comp->winner_name !== 'No winner yet')
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-2 h-2 rounded-full" style="background-color: {{ $comp->winner_color ?? '#64748b' }}"></div>
+                                        <span class="font-semibold">{{ $comp->winner_name }}</span>
+                                    </div>
+                                @else
+                                    <flux:badge size="sm" variant="subtle">Pending</flux:badge>
+                                @endif
+                            </flux:table.cell>
                             <flux:table.cell>
                                 <flux:button :href="route('competition-dashboard', $comp)" icon="eye" variant="ghost" wire:navigate></flux:button>
                                 <flux:button wire:click="editComp('{{ $comp->id }}')" icon="pencil-square" variant="ghost"></flux:button>

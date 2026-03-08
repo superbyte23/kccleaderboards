@@ -6,11 +6,16 @@ use App\Models\Event;
 use App\Models\Team;
 use App\Models\Result; 
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Illuminate\Support\Collection;
 
 new class extends Component
 {
     public Event $event;
+
+    // This tells the component to re-render whenever 'refresh-leaderboard' is fired
+    #[On('refresh-leaderboard')] // [!code ++]
+    public function refresh(): void {} // [!code ++]
 
     #[Computed]
     public function leaderboard(): Collection
