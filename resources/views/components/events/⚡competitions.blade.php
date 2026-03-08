@@ -75,7 +75,7 @@ new class extends Component
                 $this->getEventComps();
                 $this->closeCompModal();
             }
-            $this->dispatch('toast', ['type'=>'success','message'=>'Competition updated.']);
+            $this->toastSuccess('Success!', 'Competition updated.'); 
             return;
         }
 
@@ -90,14 +90,14 @@ new class extends Component
             $this->getEventComps();
             $this->closeCompModal();
         }
-        $this->dispatch('toast', ['type'=>'success','message'=>'Competition created.']);
+         $this->toastSuccess('Success!', 'Competition created successfully.'); 
     }
 
     public function editComp($id)
     {
         $comp = $this->event->competitions()->find($id);
         if (! $comp) {
-            $this->dispatch('toast',['type'=>'error','message'=>'Not found']);
+            $this->toastError('Error!', 'Competition not found');
             return;
         }
         $this->name = $comp->name;
@@ -115,7 +115,7 @@ new class extends Component
     public function deleteComp()
     {
         if (! $this->isDeletingComp) {
-            $this->dispatch('toast',['type'=>'error','message'=>'No comp selected']);
+            $this->toastError('Error!', 'No comp selected');
             return;
         }
         $comp = $this->event->competitions()->find($this->isDeletingComp);
@@ -124,7 +124,7 @@ new class extends Component
             $this->getEventComps();
             $this->showDeleteConfirm = false;
             $this->isDeletingComp = null;
-            $this->dispatch('toast',['type'=>'success','message'=>'Competition removed']);
+            $this->toastSuccess('Error!', 'Competition removed');  
         }
     }
 };

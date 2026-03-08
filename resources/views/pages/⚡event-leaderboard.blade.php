@@ -20,10 +20,12 @@ new #[Layout('layouts.guest')] class extends Component {
                 'teams.id',
                 'teams.name',
                 'teams.color',
+                'teams.avatar',
+                'teams.represents',
                 \DB::raw('COALESCE(SUM(results.score), 0) as total_score'),
                 \DB::raw('COUNT(DISTINCT results.competition_id) as competitions_participated')
             )
-            ->groupBy('teams.id', 'teams.name', 'teams.color')
+            ->groupBy('teams.id', 'teams.name', 'teams.color', 'teams.avatar', 'teams.represents')
             ->orderByDesc('total_score')
             ->orderBy('teams.name')
             ->get();
@@ -92,7 +94,7 @@ new #[Layout('layouts.guest')] class extends Component {
             <div class="relative bg-[#3d3d3d] rounded-l-3xl rounded-r-full p-3 flex items-center gap-6 group hover:translate-x-2 transition-transform cursor-pointer">
               <div class="absolute -top-2 -left-4 text-4xl">🥈</div>
               
-              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="w-20 h-20 rounded-full bg-[#555]" alt="avatar"> 
+              <img src="{{ $second->avatar ? asset('storage/' . $second->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($second->name) }}" class="w-20 h-20 rounded-full bg-[#555]" alt="avatar"> 
               <div>
                 <div class="flex items-baseline gap-2">
                   <span class="text-5xl font-bold tracking-tighter text-white/90">{{ $second->total_score }}</span>
@@ -109,7 +111,7 @@ new #[Layout('layouts.guest')] class extends Component {
             <div class="relative bg-[#6b6141] rounded-l-3xl rounded-r-full p-6 flex items-center gap-6 group hover:translate-x-2 transition-transform cursor-pointer">
               <div class="absolute -top-2 -left-4 text-5xl">🥇</div>
               
-              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka" class="w-24 h-24 rounded-full bg-[#837651]" alt="avatar">
+              <img src="{{ $first->avatar ? asset('storage/' . $first->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($first->name) }}" class="w-24 h-24 rounded-full bg-[#837651]" alt="avatar">
               <div>
                 <div class="flex items-baseline gap-2">
                   <span class="text-5xl font-bold tracking-tighter text-white/90">{{ $first->total_score }}</span>
@@ -126,7 +128,7 @@ new #[Layout('layouts.guest')] class extends Component {
             <div class="relative bg-[#4a3a3a] rounded-l-3xl rounded-r-full p-3 flex items-center gap-6 group hover:translate-x-2 transition-transform cursor-pointer">
               <div class="absolute -top-2 -left-4 text-3xl">🥉</div>
               
-              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="w-20 h-20 rounded-full bg-[#555]" alt="avatar"> 
+              <img src="{{ $third->avatar ? asset('storage/' . $third->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($third->name) }}" class="w-20 h-20 rounded-full bg-[#555]" alt="avatar"> 
               <div>
                 <div class="flex items-baseline gap-2">
                   <span class="text-5xl font-bold tracking-tighter text-white/90">{{ $third->total_score }}</span>
@@ -142,32 +144,34 @@ new #[Layout('layouts.guest')] class extends Component {
       </div>
 
       <div class="space-y-3">
-        <h3 class="text-xl font-medium mb-6 text-gray-200 text-center">Official Ranking</h3>
-        @if ($this->leaderboard->isNotEmpty())
-          @foreach ($this->leaderboard as $index => $team)
-            <div class="flex items-center gap-3">
-              <span class="text-gray-500 font-bold w-6 text-center">{{ Number::ordinal($index + 1) }}</span>
-              <div class="flex-1 bg-[#222] rounded-2xl p-3 flex justify-between items-center border border-white/5">
+        <div class="flex items-center justify-between mb-4 px-2">
+            <h3 class="text-sm font-bold uppercase tracking-widest text-gray-500">Official Ranking</h3>
+            <div class="h-px flex-1 bg-white/5 ml-4"></div>
+        </div>
+
+        @forelse ($this->leaderboard as $index => $team)
+            <div class="flex items-center gap-4 group">
+              <span class="text-gray-600 font-mono font-bold w-6 text-sm">{{ $index + 1 }}</span>
+              <div class="flex-1 bg-[#1a1a1a] hover:bg-[#222] rounded-xl p-3 flex justify-between items-center border border-white/5 transition-colors">
                 <div class="flex items-center gap-3">
-                  <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Leo" class="w-10 h-10 rounded-xl bg-blue-400" alt="user">
-                  <div class="flex items-center gap-2 px-3 py-1 rounded-lg border border-white/10" style="background-color: {{ $team->color }}">
-                    <span class="text-[10px] font-mono text-white-400">{{ $team->name }}</span>
+                  <img src="{{ $team->avatar ? asset('storage/' . $team->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($team->name) }}" class="w-8 h-8 rounded-lg" alt="user">
+                  <div class="flex flex-col">
+                    <span class="text-sm font-bold text-gray-200">{{ $team->name }}</span>
+                    <span class="text-[10px] text-gray-500 uppercase">{{ $team->represents }}</span>
                   </div>
-                  {{-- <div class="flex items-center gap-2 bg-[#1a1a1a] px-3 py-1 rounded-lg border border-white/10">
-                    <span class="text-[10px] font-mono text-gray-400">Bx4fWW...pUMDrc</span>
-                  </div> --}}
                 </div>
-                <div class="text-green-500 font-bold text-xs">{{  $team->total_score }} PTS</div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="w-2 h-2 rounded-full" style="background-color: {{ $team->color }}"></div>
+                    <div class="text-[#e5b64b] font-mono font-bold text-sm">{{ number_format($team->total_score) }} <span class="text-[10px] opacity-60">PTS</span></div>
+                </div>
               </div>
             </div>
-          @endforeach
-        @else
-            @if ($this->leaderboard->isEmpty())
-                <div class="text-center py-16">
-                    <p class="text-slate-400 text-xl">No teams found for this event.</p>
-                </div>
-            @endif
-        @endif 
+        @empty
+            <div class="text-center py-12">
+                <p class="text-gray-500">No data available for this event yet.</p>
+            </div>
+        @endforelse
       </div> 
     </div>
   </div>

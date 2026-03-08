@@ -3,6 +3,5 @@
         {{ $slot }}
 
     <livewire:toaster />
-    <livewire:sileo-toaster />
     </flux:main>
 </x-layouts::app.sidebar>

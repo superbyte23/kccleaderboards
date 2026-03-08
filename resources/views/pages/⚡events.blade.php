@@ -4,9 +4,11 @@ use App\Models\Event;
 use Livewire\Attributes\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Livewire\Attributes\Validate;
+use Livewire\Attributes\Validate; 
+use App\Livewire\Concerns\HasSileoToasts;
 
 new class extends Component {
+    use HasSileoToasts;
     use WithPagination;
 
     #[Validate('required|string|min:3|max:255')]
@@ -65,14 +67,14 @@ new class extends Component {
                 'description' => $this->description,
                 'event_date' => $this->event_date,
             ]);
-            $this->dispatch('notify', message: 'Event updated successfully!');
+            $this->toastSuccess('notify', 'Event updated successfully!');
         } else {
             Event::create([
                 'name' => $this->name,
                 'description' => $this->description,
                 'event_date' => $this->event_date,
             ]);
-            $this->dispatch('notify', message: 'Event created successfully!');
+            $this->toastSuccess('notify', 'Event created successfully!');
         }
 
         $this->resetForm();
@@ -91,7 +93,7 @@ new class extends Component {
         // dd($event);
         if ($event) {
             $event->delete();
-            $this->dispatch('notify', message: 'Event deleted successfully!');
+            $this->toastSuccess('notify', 'Event deleted successfully!');
             $this->showDeleteConfirm = false;
             $this->deleteId = null;
         }

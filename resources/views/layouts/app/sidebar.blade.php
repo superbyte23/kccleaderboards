@@ -84,5 +84,7 @@
         {{ $slot }}
 
         @fluxScripts
+        
+    <livewire:sileo-toaster />
     </body>
 </html>

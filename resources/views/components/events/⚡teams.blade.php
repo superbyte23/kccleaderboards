@@ -93,13 +93,6 @@ new class extends Component {
         }
 
         $this->toastSuccess('Success!', $this->isEditingTeam ? 'Team updated Successfully.' : 'Team created Successfully.');
-
-        
-
-        // $this->dispatch('toast', [
-        //     'type' => 'success',
-        //     'message' => $this->isEditingTeam ? 'Team updated.' : 'Team created.',
-        // ]);
     }
     
     public function editTeam($teamId)
@@ -107,11 +100,7 @@ new class extends Component {
         $team = $this->event->teams()->find($teamId);
 
         if (! $team) {
-            $this->dispatch('toast', [
-                'type' => 'error',
-                'message' => 'Team not found.',
-            ]);
-            return;
+            $this->toastError('Error!', 'Team not found.'); 
         }
 
         $this->name = $team->name;
@@ -130,10 +119,7 @@ new class extends Component {
     public function deleteTeam()
     {
         if (!$this->isDeletingTeam) {
-            $this->dispatch('toast', [
-                'type' => 'error',
-                'message' => 'No team selected for deletion.',
-            ]);
+            $this->toastError('Error!', 'No team selected for deletion.'); 
             return;
         }
 
@@ -152,10 +138,7 @@ new class extends Component {
         $this->showDeleteConfirm = false; // Close the confirmation modal
         $this->isDeletingTeam = null; // Reset the editing team
 
-        $this->dispatch('toast', [
-            'type' => 'success',
-            'message' => 'Team deleted successfully.',
-        ]);
+        $this->toastSuccess('Success!', 'Team deleted successfully.');
     }
 };
 ?>
