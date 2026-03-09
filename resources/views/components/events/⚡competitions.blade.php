@@ -3,9 +3,10 @@
 use Livewire\Component;
 use App\Models\Event;
 use App\Models\Competition;
+use App\Livewire\Concerns\HasSileoToasts;
 
-new class extends Component
-{
+new class extends Component {
+    use HasSileoToasts;
     public Event $event;
     public $competitions = [];
 
@@ -23,20 +24,22 @@ new class extends Component
     {
         $this->event = $event;
         $this->getEventComps();
+        $this->dispatch('refresh-leaderboard');
     }
 
     public function getEventComps()
     {
-        $this->competitions = $this->event->competitions()
-        ->with(['results.team']) // Eager load to avoid N+1 issues
-        ->get()
-        ->map(function ($comp) {
-            // Find the result with the highest score for this specific competition
-            $winnerResult = $comp->results()->orderByDesc('score')->first();
-            $comp->winner_name = $winnerResult ? $winnerResult->team->name : 'No winner yet';
-            $comp->winner_color = $winnerResult ? $winnerResult->team->color : null;
-            return $comp;
-        });
+        $this->competitions = $this->event
+            ->competitions()
+            ->with(['results.team']) // Eager load to avoid N+1 issues
+            ->get()
+            ->map(function ($comp) {
+                // Find the result with the highest score for this specific competition
+                $winnerResult = $comp->results()->orderByDesc('score')->first();
+                $comp->winner_name = $winnerResult ? $winnerResult->team->name : 'No winner yet';
+                $comp->winner_color = $winnerResult ? $winnerResult->team->color : null;
+                return $comp;
+            });
         $this->dispatch('refresh-leaderboard');
     }
 
@@ -75,7 +78,7 @@ new class extends Component
                 $this->getEventComps();
                 $this->closeCompModal();
             }
-            $this->toastSuccess('Success!', 'Competition updated.'); 
+            $this->toastSuccess('Success!', 'Competition updated.');
             return;
         }
 
@@ -89,14 +92,14 @@ new class extends Component
             $this->resetForm();
             $this->getEventComps();
             $this->closeCompModal();
+            $this->toastSuccess('Success!', 'Competition created successfully.');
         }
-         $this->toastSuccess('Success!', 'Competition created successfully.'); 
     }
 
     public function editComp($id)
     {
         $comp = $this->event->competitions()->find($id);
-        if (! $comp) {
+        if (!$comp) {
             $this->toastError('Error!', 'Competition not found');
             return;
         }
@@ -114,7 +117,7 @@ new class extends Component
 
     public function deleteComp()
     {
-        if (! $this->isDeletingComp) {
+        if (!$this->isDeletingComp) {
             $this->toastError('Error!', 'No comp selected');
             return;
         }
@@ -124,7 +127,7 @@ new class extends Component
             $this->getEventComps();
             $this->showDeleteConfirm = false;
             $this->isDeletingComp = null;
-            $this->toastSuccess('Error!', 'Competition removed');  
+            $this->toastSuccess('Error!', 'Competition removed');
         }
     }
 };
@@ -134,7 +137,8 @@ new class extends Component
     <section class="space-y-4">
         <div class="flex items:center justify-between">
             <flux:heading size="xl">Competitions</flux:heading>
-            <flux:button wire:click="openCompModal" icon="plus">Add Competition</flux:button>
+            <flux:button wire:click="openCompModal" wire:loading.attr="disabled" wire:target="openCompModal" icon="plus">
+                Add Competition</flux:button>
         </div>
 
         <flux:card>
@@ -146,14 +150,15 @@ new class extends Component
                     <flux:table.column></flux:table.column>
                 </flux:table.columns>
                 <flux:table.rows>
-                    @foreach($competitions as $comp)
+                    @foreach ($competitions as $comp)
                         <flux:table.row wire:key="comp-{{ $comp->id }}">
                             <flux:table.cell font="medium">{{ $comp->name }}</flux:table.cell>
                             <flux:table.cell>{{ $comp->category }}</flux:table.cell>
                             <flux:table.cell>
-                                @if($comp->winner_name !== 'No winner yet')
+                                @if ($comp->winner_name !== 'No winner yet')
                                     <div class="flex items-center gap-2">
-                                        <div class="w-2 h-2 rounded-full" style="background-color: {{ $comp->winner_color ?? '#64748b' }}"></div>
+                                        <div class="w-2 h-2 rounded-full"
+                                            style="background-color: {{ $comp->winner_color ?? '#64748b' }}"></div>
                                         <span class="font-semibold">{{ $comp->winner_name }}</span>
                                     </div>
                                 @else
@@ -161,9 +166,20 @@ new class extends Component
                                 @endif
                             </flux:table.cell>
                             <flux:table.cell>
-                                <flux:button :href="route('competition-dashboard', $comp)" icon="eye" variant="ghost" wire:navigate></flux:button>
-                                <flux:button wire:click="editComp('{{ $comp->id }}')" icon="pencil-square" variant="ghost"></flux:button>
-                                <flux:button wire:click="confirmDeleteComp('{{ $comp->id }}')" icon="trash" variant="ghost"></flux:button>
+                                <flux:button 
+                                    :href="route('competition-dashboard', $comp)" 
+                                    icon="eye"
+                                    variant="ghost" wire:navigate /> 
+                                <flux:button 
+                                    wire:click="editComp('{{ $comp->id }}')" 
+                                    wire:loading.attr="disabled"
+                                    wire:target="editComp({{ $comp->id }})" 
+                                    icon="pencil-square" variant="ghost" />
+                                <flux:button 
+                                    wire:click="confirmDeleteComp('{{ $comp->id }}')"
+                                    wire:loading.attr="disabled" 
+                                    wire:target="confirmDeleteComp({{ $comp->id }})"
+                                    icon="trash" variant="ghost" /> 
                             </flux:table.cell>
                         </flux:table.row>
                     @endforeach
@@ -171,7 +187,7 @@ new class extends Component
             </flux:table>
         </flux:card>
     </section>
-    
+
 
     <flux:modal wire:model.self="showCompModal" class="md:w-96">
         <form wire:submit="saveComp">

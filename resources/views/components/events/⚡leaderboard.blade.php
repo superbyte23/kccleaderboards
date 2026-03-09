@@ -58,9 +58,9 @@ new class extends Component
  
 }
 ?> 
-<div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     <!-- Event Header -->
-    <div class="mb-8">
+    <div class="mb-8 h-auto">
         <flux:card>
             <h1 class="text-4xl font-bold mb-2">{{ $this->eventInfo()['name'] }}</h1>
             <p class="mb-4">{{ $this->eventInfo()['description'] }}</p>
@@ -83,7 +83,7 @@ new class extends Component
     </div>
 
     <!-- Leaderboard Table -->
-    <flux:card>
+    <flux:card class="h-auto">
         @if($this->leaderboard->isNotEmpty())
             <div class="overflow-x-auto">
                 <flux:table class="w-full">

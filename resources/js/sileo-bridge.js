@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fill: isDark ? "#ffffff" : "#171717",
         roundness: 16,
         styles: {
+            title: "font-medium",
             // title:       isDark ? "text-neutral-900!"                       : "text-white!",
             description: isDark ? "text-neutral-500!"                       : "text-white/75!",
             badge:       isDark ? "bg-neutral-100!"                         : "bg-white/10!",

@@ -74,18 +74,23 @@ new class extends Component {
         // Handle Avatar Upload
         if ($this->avatar) {
             $data['avatar'] = $this->avatar->store('avatars', 'public');
-        } 
+        }
 
         if ($this->isEditingTeam) {
             $team = $this->event->teams()->find($this->isEditingTeam);
-            if ($team->avatar) {
-                Storage::disk('public')->delete($team->avatar);
-            }
+
             if ($team) {
+
+                // delete old avatar ONLY if new one uploaded
+                if ($this->avatar && $team->avatar) {
+                    Storage::disk('public')->delete($team->avatar);
+                }
+
                 $team->update($data);
                 $this->getEventTeams();
                 $this->closeTeamModal();
             }
+
         } else {
             $this->event->teams()->create($data);
             $this->getEventTeams();
