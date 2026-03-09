@@ -2,10 +2,11 @@
 
 use Livewire\Component;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 new class extends Component
 {
-     public $users;
+    public $users;
 
     public $userId;
     public $name;
@@ -15,17 +16,25 @@ new class extends Component
     public $showModal = false;
     public $isEdit = false;
 
+    public $deleteId;
+
     protected function rules()
     {
         return [
             'name' => 'required|min:3',
             'email' => 'required|email',
+            'password' => $this->isEdit ? 'nullable|min:6' : 'required|min:6'
         ];
     }
 
-    public function boot()
+    public function mount()
     {
-        $this->users = User::latest()->get(); 
+        $this->getUsers();
+    }
+
+    public function getUsers()
+    {
+        $this->users = User::latest()->get();
     }
 
     public function create()
@@ -54,27 +63,46 @@ new class extends Component
 
             $user = User::findOrFail($this->userId);
 
-            $user->update([
+            $data = [
                 'name' => $this->name,
                 'email' => $this->email,
-            ]);
+            ];
+
+            if ($this->password) {
+                $data['password'] = Hash::make($this->password);
+            }
+
+            $user->update($data);
 
         } else {
 
             User::create([
                 'name' => $this->name,
                 'email' => $this->email,
-                'password' => $this->password
+                'password' => Hash::make($this->password)
             ]);
 
         }
 
+        $this->getUsers();
         $this->resetForm();
     }
 
-    public function delete($id)
+    public function confirmDelete($id)
     {
-        User::findOrFail($id)->delete();
+        $this->deleteId = $id;
+        $this->modal('delete-user')->show();
+    }
+
+    public function deleteUser()
+    {
+        User::findOrFail($this->deleteId)->delete();
+
+        $this->deleteId = null;
+
+        $this->getUsers();
+
+        $this->modal('delete-user')->close();
     }
 
     public function resetForm()
@@ -93,127 +121,182 @@ new class extends Component
 
 <div>
 
-    <flux:card>
+<flux:card>
 
-        <div class="flex justify-between mb-4">
+    <div class="flex justify-between mb-4">
 
-            <h2 class="text-xl font-bold">
-                Users
-            </h2>
+        <flux:heading size="lg">
+            Users
+        </flux:heading>
+
+        <flux:button wire:click="create" variant="primary">
+            Add User
+        </flux:button>
+
+    </div>
+
+
+    <flux:table>
+
+        <flux:table.columns>
+            <flux:table.column>Name</flux:table.column>
+            <flux:table.column>Email</flux:table.column>
+            <flux:table.column>Actions</flux:table.column>
+        </flux:table.columns>
+
+        <flux:table.rows>
+
+            @foreach($users as $user)
+
+            <flux:table.row wire:key="user-{{ $user->id }}">
+
+                <flux:table.cell>
+                    {{ $user->name }}
+                </flux:table.cell>
+
+                <flux:table.cell>
+                    {{ $user->email }}
+                </flux:table.cell>
+
+                <flux:table.cell class="space-x-2">
+
+                    <flux:button
+                        size="sm"
+                        wire:click="edit({{ $user->id }})"
+                        wire.target="edit({{ $user->id }})"
+                        wire:loading.attr="disabled"
+                    >
+                        Edit
+                    </flux:button>
+
+ 
+
+                        <flux:button
+                            size="sm"
+                            variant="danger"
+                            wire:click="confirmDelete({{ $user->id }})"
+                            wire.target="confirmDelete({{ $user->id }})"
+                            wire:loading.attr="disabled"
+                        >
+                            Delete
+                        </flux:button> 
+
+                </flux:table.cell>
+
+            </flux:table.row>
+
+            @endforeach
+
+        </flux:table.rows>
+
+    </flux:table>
+
+</flux:card>
+
+
+
+{{-- Create / Edit Modal --}}
+
+<flux:modal wire:model="showModal" class="md:w-96">
+
+    <div class="space-y-6">
+
+        <flux:heading size="lg">
+            {{ $isEdit ? 'Edit User' : 'Create User' }}
+        </flux:heading>
+
+        <flux:text>
+            {{ $isEdit ? 'Update user information' : 'Add new user' }}
+        </flux:text>
+
+
+        <flux:field>
+            <flux:label>Name</flux:label>
+            <flux:input wire:model="name"/>
+            <flux:error name="name"/>
+        </flux:field>
+
+
+        <flux:field>
+            <flux:label>Email</flux:label>
+            <flux:input type="email" wire:model="email"/>
+            <flux:error name="email"/>
+        </flux:field>
+
+
+        @if(!$isEdit)
+
+        <flux:field>
+            <flux:label>Password</flux:label>
+            <flux:input type="password" wire:model="password"/>
+            <flux:error name="password"/>
+        </flux:field>
+
+        @endif
+
+
+        <div class="flex justify-end gap-2">
 
             <flux:button
-                wire:click="create"
-                variant="primary"
+                variant="ghost"
+                wire:click="$set('showModal', false)"
             >
-                Add User
+                Cancel
+            </flux:button>
+
+            <flux:button
+                variant="primary"
+                wire:click="save"
+            >
+                Save
             </flux:button>
 
         </div>
 
+    </div>
 
-        <flux:table>
-
-            <flux:table.columns>
-                <flux:table.column>Name</flux:table.column>
-                <flux:table.column>Email</flux:table.column>
-                <flux:table.column>Actions</flux:table.column>
-            </flux:table.columns>
-
-            <flux:table.rows>
-
-                @foreach($users as $user)
-
-                    <flux:table.row>
-
-                        <flux:table.cell>
-                            {{ $user->name }}
-                        </flux:table.cell>
-
-                        <flux:table.cell>
-                            {{ $user->email }}
-                        </flux:table.cell>
-
-                        <flux:table.cell>
-
-                            <flux:button
-                                size="sm"
-                                wire:click="edit({{ $user->id }})"
-                            >
-                                Edit
-                            </flux:button>
-
-                            <flux:button
-                                size="sm"
-                                variant="danger"
-                                wire:click="delete({{ $user->id }})"
-                            >
-                                Delete
-                            </flux:button>
-
-                        </flux:table.cell>
-
-                    </flux:table.row>
-
-                @endforeach
-
-            </flux:table.rows>
-
-        </flux:table>
-
-    </flux:card>
+</flux:modal>
 
 
 
-    <flux:modal wire:model="showModal">
+{{-- Delete Confirmation Modal --}}
 
-        <flux:card class="w-[400px]">
+<flux:modal name="delete-user" class="min-w-[22rem]">
 
-            <h3 class="text-lg font-bold mb-4">
-                {{ $isEdit ? 'Edit User' : 'Create User' }}
-            </h3>
+    <div class="space-y-6">
 
-            <flux:input
-                label="Name"
-                wire:model="name"
-            />
+        <div>
+            <flux:heading size="lg">
+                Delete User?
+            </flux:heading>
 
-            <flux:input
-                label="Email"
-                type="email"
-                wire:model="email"
-            />
+            <flux:text class="mt-2">
+                You're about to delete this user.<br>
+                This action cannot be reversed.
+            </flux:text>
+        </div>
 
-            @if(!$isEdit)
+        <div class="flex gap-2">
 
-            <flux:input
-                label="Password"
-                type="password"
-                wire:model="password"
-            />
+            <flux:spacer />
 
-            @endif
-
-
-            <div class="flex justify-end gap-2 mt-4">
-
-                <flux:button
-                    variant="ghost"
-                    wire:click="$set('showModal', false)"
-                >
+            <flux:modal.close>
+                <flux:button variant="ghost">
                     Cancel
                 </flux:button>
+            </flux:modal.close>
 
-                <flux:button
-                    variant="primary"
-                    wire:click="save"
-                >
-                    Save
-                </flux:button>
+            <flux:button
+                variant="danger"
+                wire:click="deleteUser"
+            >
+                Delete User
+            </flux:button>
 
-            </div>
+        </div>
 
-        </flux:card>
+    </div>
 
-    </flux:modal>
+</flux:modal>
 
 </div>
