@@ -19,6 +19,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire("/event-dashboard/{event}", "pages::event-dashboard")->name("event-dashboard");
     Route::livewire("/competition-dashboard/{competition}", "pages::competition-dashboard")->name("competition-dashboard");
     Route::livewire("/test-toast", "pages::example-sileo-toaster");
+    Route::livewire("/users", "pages::users")->name('users');
     
 });
 
