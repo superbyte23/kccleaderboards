@@ -15,7 +15,7 @@
         @livewireStyles
         @fluxAppearance
     </head>
-    <body class="min-h-screen bg-[#121212] text-white font-sans p-6 md:p-12">
+    <body class="min-h-screen  font-sans p-6 md:p-12"> 
         {{ $slot }} 
         @livewireScripts
         @fluxScripts

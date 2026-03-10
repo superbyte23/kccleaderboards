@@ -92,30 +92,52 @@ new #[Layout('layouts.guest')] class extends Component {
 ?>
 
 <div class="flex flex-col lg:flex-row gap-8 items-start justify-center" wire:poll.6000ms>
-  <div class="w-full max-w-4xl bg-[#121212] rounded-[2.5rem] shadow-2xl">
+  <div class="w-full max-w-4xl p-5 shadow-xl">
     
-    <header class="flex md:flex-row justify-between items-start md:items-center mb-12 gap-4">
+    <header class="flex md:flex-row justify-between items-start md:items-center gap-4">
       <div class="flex justify-between items-center gap-3">
         <div> 
             <h1 class="text-xl font-bold text-[#e5b64b]">{{ $event->name }}</h1>
-            <h1 class="text-xs font-bold text-[#fafafa]">{{ $event->description }}</h1>
+            <h1 class="text-xs font-bold">{{ $event->description }}</h1>
         </div>
-        <flux:badge color="lime">Live</flux:badge> 
       </div>
-      <div class="flex items-center gap-3"> 
-          {{-- Game Summary Button --}}
-          <flux:modal.trigger name="game-summary">
-              <flux:button variant="primary" icon="trophy" wire:click="openSummary">Game Summary</flux:button>
-          </flux:modal.trigger>
+      <div class="flex items-center gap-3">  
+          <flux:button 
+    variant="subtle" 
+    square 
+    x-data 
+    @click="
+        let isDark = document.documentElement.classList.contains('dark');
+        let newTheme = isDark ? 'light' : 'dark';
+        
+        // 1. Update the DOM immediately
+        if (newTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
 
-          {{-- <flux:button 
-              variant="primary" 
-              wire:navigate 
-              href="/" 
-              icon="arrow-left"
-          >Back to Homepage</flux:button> --}}
+        // 2. Sync all storage keys so it persists on refresh
+        localStorage.setItem('flux.appearance', newTheme);
+        localStorage.setItem('theme', newTheme);
+        localStorage.setItem('appearance', newTheme);
+        localStorage.setItem('mary-theme', newTheme);
+
+        // 3. Dispatch an event if other components need to know
+        window.dispatchEvent(new CustomEvent('theme-changed', { detail: newTheme }));
+    "
+>
+    <flux:icon.sun class="dark:hidden" />
+    <flux:icon.moon class="hidden dark:block" />
+</flux:button> 
+          <flux:badge color="red">Live</flux:badge>
         </div>  
     </header>
+    
+    
+    <flux:button class="my-4" icon="trophy" wire:click.="openSummary">Game Summary</flux:button> 
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
       <div class="space-y-4">
@@ -178,19 +200,19 @@ new #[Layout('layouts.guest')] class extends Component {
 
       <div class="space-y-3">
         <div class="flex items-center justify-between mb-4 px-2">
-            <h3 class="text-sm font-bold uppercase tracking-widest text-gray-500">Official Ranking</h3>
+            <h3 class="text-sm font-bold uppercase tracking-widest">Official Ranking</h3>
             <div class="h-px flex-1 bg-white/5 ml-4"></div>
         </div>
 
         @forelse ($this->leaderboard as $index => $team)
             <div class="flex items-center gap-4 group">
-              <span class="text-gray-600 font-mono font-bold w-6 text-sm">{{ $index + 1 }}</span>
-              <div class="flex-1 bg-[#1a1a1a] hover:bg-[#222] rounded-xl p-3 flex justify-between items-center border border-white/5 transition-colors">
+              <span class="font-mono font-bold w-6 text-sm">{{ $index + 1 }}</span>
+              <div class="flex-1 rounded-xl p-3 flex justify-between items-center border border-white/5 transition-colors">
                 <div class="flex items-center gap-3">
                   <img src="{{ $team->avatar ? asset('storage/' . $team->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($team->name) }}" class="w-8 h-8 rounded-lg" alt="user">
                   <div class="flex flex-col">
-                    <span class="text-sm font-bold text-gray-200">{{ $team->name }}</span>
-                    <span class="text-[10px] text-gray-500 uppercase">{{ $team->represents }}</span>
+                    <span class="text-sm font-bold">{{ $team->name }}</span>
+                    <span class="text-[10px] uppercase">{{ $team->represents }}</span>
                   </div>
                 </div>
                 <div class="flex items-center gap-3">
@@ -201,7 +223,7 @@ new #[Layout('layouts.guest')] class extends Component {
             </div>
         @empty
             <div class="text-center py-12">
-                <p class="text-gray-500">No data available for this event yet.</p>
+                <p class="text-gray">No data available for this event yet.</p>
             </div>
         @endforelse
       </div> 
@@ -210,12 +232,12 @@ new #[Layout('layouts.guest')] class extends Component {
 
 
   {{-- ─── Game Summary Modal ────────────────────────────────────────────── --}}
-  <flux:modal name="game-summary" class="w-full max-w-3xl" style="background: #1a1a1a;">
+  <flux:modal name="game-summary" class="w-full max-w-3xl">
     <div class="flex flex-col gap-6">
 
       {{-- Modal Header --}}
       <div class="flex items-center gap-3">
-        <span class="text-2xl">🏆</span>
+        <span class="text-5xl">🏆</span>
         <div>
           <flux:heading size="lg" class="text-[#e5b64b]">Game Summary</flux:heading>
           <flux:subheading>Winners per competition — {{ $event->name }}</flux:subheading>
@@ -225,40 +247,40 @@ new #[Layout('layouts.guest')] class extends Component {
       {{-- Table --}}
       @if ($this->gameSummary->isEmpty())
         <div class="text-center py-16">
-          <p class="text-gray-500 text-sm">No competition results recorded yet.</p>
+          <p class= text-sm">No competition results recorded yet.</p>
         </div>
       @else
         <div class="overflow-x-auto">
           <table class="w-full text-sm border-separate" style="border-spacing: 0 6px;">
             <thead>
               <tr>
-                <th class="text-left text-[10px] font-bold uppercase tracking-widest text-gray-600 pb-2 pl-3">Competition</th>
-                <th class="text-left text-[10px] font-bold uppercase tracking-widest text-gray-600 pb-2 pl-3">Category</th>
+                <th class="text-left text-[10px] font-bold uppercase tracking-w12est pb-2 pl-3">Competition</th>
+                <th class="text-left text-[10px] font-bold uppercase tracking-w12est pb-2 pl-3">Category</th>
                 <th class="text-center text-[10px] font-bold uppercase tracking-widest text-yellow-500 pb-2">1st</th>
                 <th class="text-center text-[10px] font-bold uppercase tracking-widest text-gray-400 pb-2">2nd</th>
                 <th class="text-center text-[10px] font-bold uppercase tracking-widest text-amber-700 pb-2">3rd</th>
-                <th class="text-center text-[10px] font-bold uppercase tracking-widest text-gray-600 pb-2">4th</th>
+                <th class="text-center text-[10px] font-bold uppercase tracking-w12est pb-2">4th</th>
               </tr>
             </thead>
             <tbody>
               @foreach ($this->gameSummary as $comp)
-                <tr class="group">
-                  <td class="group-hover:bg-gray-200 transition-colors rounded-l-xl px-4 py-3 font-semibold text-gray-500 whitespace-nowrap">
+                <tr class="group hover:bg-gray-200 hover:text-[#000]">
+                  <td class="transition-colors rounded-l-xl px-4 py-3 font-semibold whitespace-nowrap">
                     {{ $comp->name }}
                   </td>
-                  <td class="group-hover:bg-gray-200 transition-colors px-3 py-3">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500 bg-white/5 px-2 py-1 rounded-full">
+                  <td class="transition-colors px-3 py-3">
+                    <span class="text-[10px] font-bold uppercase tracking-wider bg-white/5 px-2 py-1 rounded-full">
                       {{ $comp->category }}
                     </span>
                   </td>
 
                   {{-- 1st --}}
-                  <td class="group-hover:bg-gray-200 transition-colors px-3 py-3 text-center">
+                  <td class="transition-colors px-3 py-3 text-center">
                     @if ($comp->first)
                       <div class="flex flex-col items-center gap-1">
                         <img src="{{ $comp->first->avatar ? asset('storage/' . $comp->first->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($comp->first->name) }}" class="w-7 h-7 rounded-full ring-2 ring-yellow-500/60" alt="{{ $comp->first->name }}">
                         <span class="text-[11px] font-bold text-yellow-400 leading-tight">{{ $comp->first->name }}</span>
-                        <span class="text-[10px] text-gray-600 font-mono">{{ number_format($comp->first_score) }}</span>
+                        <span class="text-[12px] font-mono">{{ number_format($comp->first_score) }}</span>
                       </div>
                     @else
                       <span class="text-gray-700 text-xs">—</span>
@@ -266,12 +288,12 @@ new #[Layout('layouts.guest')] class extends Component {
                   </td>
 
                   {{-- 2nd --}}
-                  <td class="group-hover:bg-gray-200 transition-colors px-3 py-3 text-center">
+                  <td class="transition-colors px-3 py-3 text-center">
                     @if ($comp->second)
                       <div class="flex flex-col items-center gap-1">
                         <img src="{{ $comp->second->avatar ? asset('storage/' . $comp->second->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($comp->second->name) }}" class="w-7 h-7 rounded-full ring-2 ring-gray-400/50" alt="{{ $comp->second->name }}">
-                        <span class="text-[11px] font-bold text-gray-300 leading-tight">{{ $comp->second->name }}</span>
-                        <span class="text-[10px] text-gray-600 font-mono">{{ number_format($comp->second_score) }}</span>
+                        <span class="text-[11px] font-bold text-gray-400 leading-tight">{{ $comp->second->name }}</span>
+                        <span class="text-[12px] font-mono">{{ number_format($comp->second_score) }}</span>
                       </div>
                     @else
                       <span class="text-gray-700 text-xs">—</span>
@@ -279,12 +301,12 @@ new #[Layout('layouts.guest')] class extends Component {
                   </td>
 
                   {{-- 3rd --}}
-                  <td class="group-hover:bg-gray-200 transition-colors px-3 py-3 text-center">
+                  <td class="transition-colors px-3 py-3 text-center">
                     @if ($comp->third)
                       <div class="flex flex-col items-center gap-1">
                         <img src="{{ $comp->third->avatar ? asset('storage/' . $comp->third->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($comp->third->name) }}" class="w-7 h-7 rounded-full ring-2 ring-amber-700/50" alt="{{ $comp->third->name }}">
                         <span class="text-[11px] font-bold text-amber-600 leading-tight">{{ $comp->third->name }}</span>
-                        <span class="text-[10px] text-gray-600 font-mono">{{ number_format($comp->third_score) }}</span>
+                        <span class="text-[12px] font-mono">{{ number_format($comp->third_score) }}</span>
                       </div>
                     @else
                       <span class="text-gray-700 text-xs">—</span>
@@ -292,12 +314,12 @@ new #[Layout('layouts.guest')] class extends Component {
                   </td>
 
                   {{-- 4th --}}
-                  <td class="group-hover:bg-gray-200 transition-colors rounded-r-xl px-3 py-3 text-center">
+                  <td class="transition-colors rounded-r-xl px-3 py-3 text-center">
                     @if ($comp->fourth)
                       <div class="flex flex-col items-center gap-1">
                         <img src="{{ $comp->fourth->avatar ? asset('storage/' . $comp->fourth->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($comp->fourth->name) }}" class="w-7 h-7 rounded-full ring-2 ring-gray-700/50" alt="{{ $comp->fourth->name }}">
-                        <span class="text-[11px] font-bold text-gray-500 leading-tight">{{ $comp->fourth->name }}</span>
-                        <span class="text-[10px] text-gray-600 font-mono">{{ number_format($comp->fourth_score) }}</span>
+                        <span class="text-[11px] font-bold leading-tight">{{ $comp->fourth->name }}</span>
+                        <span class="text-[12px] font-mono">{{ number_format($comp->fourth_score) }}</span>
                       </div>
                     @else
                       <span class="text-gray-700 text-xs">—</span>
@@ -312,7 +334,7 @@ new #[Layout('layouts.guest')] class extends Component {
 
       {{-- Footer --}}
       <div class="flex justify-between items-center pt-2 border-t border-white/5">
-        <span class="text-xs text-gray-600">
+        <span class="te12-xs">
           {{ $this->gameSummary->count() }} competition{{ $this->gameSummary->count() !== 1 ? 's' : '' }} total
         </span>
         <flux:modal.close>
@@ -322,5 +344,13 @@ new #[Layout('layouts.guest')] class extends Component {
 
     </div>
   </flux:modal>
+
+  <script>
+    const theme = localStorage.getItem('flux.appearance') || 'light';
+    if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+</script>
 
 </div>
