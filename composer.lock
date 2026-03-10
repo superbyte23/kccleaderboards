@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7d5c6f1175b6a7358652ff0ecef20c09",
+    "content-hash": "f3594e5886c9fe1b1bd6633bb20d2259",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -2189,21 +2189,22 @@
         },
         {
             "name": "livewire/blaze",
-            "version": "v1.0.0",
+            "version": "v1.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/livewire/blaze.git",
-                "reference": "f585b2af3c319ac71553cf93e780a626c4ebe02b"
+                "reference": "581ee7feff0f594e1e1678a59bda186a2154e335"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/livewire/blaze/zipball/f585b2af3c319ac71553cf93e780a626c4ebe02b",
-                "reference": "f585b2af3c319ac71553cf93e780a626c4ebe02b",
+                "url": "https://api.github.com/repos/livewire/blaze/zipball/581ee7feff0f594e1e1678a59bda186a2154e335",
+                "reference": "581ee7feff0f594e1e1678a59bda186a2154e335",
                 "shasum": ""
             },
             "require": {
                 "illuminate/support": "^10.0|^11.0|^12.0",
                 "illuminate/view": "^10.0|^11.0|^12.0",
+                "nikic/php-parser": "^5.0",
                 "php": "^8.1"
             },
             "conflict": {
@@ -2240,9 +2241,9 @@
             "description": "A tool for optimizing Blade component performance by folding them into parent templates",
             "support": {
                 "issues": "https://github.com/livewire/blaze/issues",
-                "source": "https://github.com/livewire/blaze/tree/v1.0.0"
+                "source": "https://github.com/livewire/blaze/tree/v1.0.4"
             },
-            "time": "2026-02-24T16:02:42+00:00"
+            "time": "2026-03-01T21:10:57+00:00"
         },
         {
             "name": "livewire/flux",
