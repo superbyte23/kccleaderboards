@@ -7,7 +7,9 @@ use App\Models\Competition;
 use Livewire\Attributes\Computed;
 use Illuminate\Support\Collection;
 
-new #[Layout('layouts.guest')] class extends Component {
+new #[Layout('layouts.guest')] 
+class extends Component {
+    #[Locked]
     public $event;
     public string $timeframe = 'daily';
 
@@ -151,7 +153,7 @@ new #[Layout('layouts.guest')] class extends Component {
           @if ($second)
             <div class="relative bg-[#3d3d3d] rounded-l-3xl rounded-r-full p-3 flex items-center gap-6 group hover:translate-x-2 transition-transform cursor-pointer">
               <div class="absolute -top-2 -left-4 text-4xl">🥈</div>
-              <img src="{{ $second->avatar ? asset('storage/' . $second->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($second->name) }}" class="w-20 h-20 rounded-full bg-[#555]" alt="avatar"> 
+              <img src="{{ $second->avatar ? asset('uploads/' . $second->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($second->name) }}" class="w-20 h-20 rounded-full bg-[#555]" alt="avatar"> 
               <div>
                 <div class="flex items-baseline gap-2">
                   <span class="text-5xl font-bold tracking-tighter text-white/90">{{ $second->total_score }}</span>
@@ -167,7 +169,7 @@ new #[Layout('layouts.guest')] class extends Component {
           @if ($first) 
             <div class="relative bg-[#6b6141] rounded-l-3xl rounded-r-full p-6 flex items-center gap-6 group hover:translate-x-2 transition-transform cursor-pointer">
               <div class="absolute -top-2 -left-4 text-5xl">🥇</div>
-              <img src="{{ $first->avatar ? asset('storage/' . $first->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($first->name) }}" class="w-24 h-24 rounded-full bg-[#837651]" alt="avatar">
+              <img src="{{ $first->avatar ? asset('uploads/' . $first->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($first->name) }}" class="w-24 h-24 rounded-full bg-[#837651]" alt="avatar">
               <div>
                 <div class="flex items-baseline gap-2">
                   <span class="text-5xl font-bold tracking-tighter text-white/90">{{ $first->total_score }}</span>
@@ -183,7 +185,7 @@ new #[Layout('layouts.guest')] class extends Component {
           @if ($third) 
             <div class="relative bg-[#4a3a3a] rounded-l-3xl rounded-r-full p-3 flex items-center gap-6 group hover:translate-x-2 transition-transform cursor-pointer">
               <div class="absolute -top-2 -left-4 text-3xl">🥉</div>
-              <img src="{{ $third->avatar ? asset('storage/' . $third->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($third->name) }}" class="w-20 h-20 rounded-full bg-[#555]" alt="avatar"> 
+              <img src="{{ $third->avatar ? asset('uploads/' . $third->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($third->name) }}" class="w-20 h-20 rounded-full bg-[#555]" alt="avatar"> 
               <div>
                 <div class="flex items-baseline gap-2">
                   <span class="text-5xl font-bold tracking-tighter text-white/90">{{ $third->total_score }}</span>
@@ -209,7 +211,7 @@ new #[Layout('layouts.guest')] class extends Component {
               <span class="font-mono font-bold w-6 text-sm">{{ $index + 1 }}</span>
               <div class="flex-1 rounded-xl p-3 flex justify-between items-center border border-white/5 transition-colors">
                 <div class="flex items-center gap-3">
-                  <img src="{{ $team->avatar ? asset('storage/' . $team->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($team->name) }}" class="w-8 h-8 rounded-lg" alt="user">
+                  <img src="{{ $team->avatar ? asset('uploads/' . $team->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($team->name) }}" class="w-8 h-8 rounded-lg" alt="user">
                   <div class="flex flex-col">
                     <span class="text-sm font-bold">{{ $team->name }}</span>
                     <span class="text-[10px] uppercase">{{ $team->represents }}</span>
@@ -278,7 +280,7 @@ new #[Layout('layouts.guest')] class extends Component {
                   <td class="transition-colors px-3 py-3 text-center">
                     @if ($comp->first)
                       <div class="flex flex-col items-center gap-1">
-                        <img src="{{ $comp->first->avatar ? asset('storage/' . $comp->first->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($comp->first->name) }}" class="w-7 h-7 rounded-full ring-2 ring-yellow-500/60" alt="{{ $comp->first->name }}">
+                        <img src="{{ $comp->first->avatar ? asset('uploads/' . $comp->first->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($comp->first->name) }}" class="w-7 h-7 rounded-full ring-2 ring-yellow-500/60" alt="{{ $comp->first->name }}">
                         <span class="text-[11px] font-bold text-yellow-400 leading-tight">{{ $comp->first->name }}</span>
                         <span class="text-[12px] font-mono">{{ number_format($comp->first_score) }}</span>
                       </div>
@@ -291,7 +293,7 @@ new #[Layout('layouts.guest')] class extends Component {
                   <td class="transition-colors px-3 py-3 text-center">
                     @if ($comp->second)
                       <div class="flex flex-col items-center gap-1">
-                        <img src="{{ $comp->second->avatar ? asset('storage/' . $comp->second->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($comp->second->name) }}" class="w-7 h-7 rounded-full ring-2 ring-gray-400/50" alt="{{ $comp->second->name }}">
+                        <img src="{{ $comp->second->avatar ? asset('uploads/' . $comp->second->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($comp->second->name) }}" class="w-7 h-7 rounded-full ring-2 ring-gray-400/50" alt="{{ $comp->second->name }}">
                         <span class="text-[11px] font-bold text-gray-400 leading-tight">{{ $comp->second->name }}</span>
                         <span class="text-[12px] font-mono">{{ number_format($comp->second_score) }}</span>
                       </div>
@@ -304,7 +306,7 @@ new #[Layout('layouts.guest')] class extends Component {
                   <td class="transition-colors px-3 py-3 text-center">
                     @if ($comp->third)
                       <div class="flex flex-col items-center gap-1">
-                        <img src="{{ $comp->third->avatar ? asset('storage/' . $comp->third->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($comp->third->name) }}" class="w-7 h-7 rounded-full ring-2 ring-amber-700/50" alt="{{ $comp->third->name }}">
+                        <img src="{{ $comp->third->avatar ? asset('uploads/' . $comp->third->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($comp->third->name) }}" class="w-7 h-7 rounded-full ring-2 ring-amber-700/50" alt="{{ $comp->third->name }}">
                         <span class="text-[11px] font-bold text-amber-600 leading-tight">{{ $comp->third->name }}</span>
                         <span class="text-[12px] font-mono">{{ number_format($comp->third_score) }}</span>
                       </div>
@@ -317,7 +319,7 @@ new #[Layout('layouts.guest')] class extends Component {
                   <td class="transition-colors rounded-r-xl px-3 py-3 text-center">
                     @if ($comp->fourth)
                       <div class="flex flex-col items-center gap-1">
-                        <img src="{{ $comp->fourth->avatar ? asset('storage/' . $comp->fourth->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($comp->fourth->name) }}" class="w-7 h-7 rounded-full ring-2 ring-gray-700/50" alt="{{ $comp->fourth->name }}">
+                        <img src="{{ $comp->fourth->avatar ? asset('uploads/' . $comp->fourth->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($comp->fourth->name) }}" class="w-7 h-7 rounded-full ring-2 ring-gray-700/50" alt="{{ $comp->fourth->name }}">
                         <span class="text-[11px] font-bold leading-tight">{{ $comp->fourth->name }}</span>
                         <span class="text-[12px] font-mono">{{ number_format($comp->fourth_score) }}</span>
                       </div>

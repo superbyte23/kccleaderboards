@@ -62,7 +62,7 @@ new class extends Component {
             'name' => 'required|string|max:255',
             'color' => 'required|string|max:7',
             'represents' => 'nullable|string|max:255',
-            'avatar' => 'nullable|image|max:2048', // Max 2MB
+            'avatar' => 'nullable|image|max:2048',
         ]);
 
         $data = [
@@ -73,7 +73,7 @@ new class extends Component {
 
         // Handle Avatar Upload
         if ($this->avatar) {
-            $data['avatar'] = $this->avatar->store('avatars', 'public');
+            $data['avatar'] = $this->avatar->store('avatars', 'uploads'); // ← changed
         }
 
         if ($this->isEditingTeam) {
@@ -83,7 +83,7 @@ new class extends Component {
 
                 // delete old avatar ONLY if new one uploaded
                 if ($this->avatar && $team->avatar) {
-                    Storage::disk('public')->delete($team->avatar);
+                    Storage::disk('uploads')->delete($team->avatar); // ← changed
                 }
 
                 $team->update($data);
@@ -170,7 +170,7 @@ new class extends Component {
                 <flux:table.rows>
                     @foreach ($teams as $team)
                         <flux:table.row wire:key="team-{{ $team->id }}"> 
-                            <flux:table.cell><flux:avatar src="{{ $team->avatar ? asset('storage/' . $team->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($team->name) }}" /></flux:table.cell>
+                            <flux:table.cell><flux:avatar src="{{ $team->avatar ? asset('uploads/' . $team->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($team->name) }}" /></flux:table.cell>
                             <flux:table.cell font="medium">
                                 <flux:badge style="background-color: {{ $team->color }};" >{{ $team->name }}</flux:badge>
                             </flux:table.cell>
@@ -223,7 +223,7 @@ new class extends Component {
                             <img src="{{ $avatar->temporaryUrl() }}" class="w-16 h-16 rounded-full border">
                         @elseif ($isEditingTeam && ($currentTeam = $teams->find($isEditingTeam)) && $currentTeam->avatar)
                             {{-- Existing file from database --}}
-                            <img src="{{ asset('storage/' . $currentTeam->avatar) }}" class="w-16 h-16 rounded-full border">
+                            <img src="{{ asset('uploads/' . $currentTeam->avatar) }}" class="w-16 h-16 rounded-full border">
                         @endif
                     </div>
                 </flux:field>
