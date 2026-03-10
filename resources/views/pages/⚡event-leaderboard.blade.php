@@ -208,7 +208,7 @@ class extends Component {
 
         @forelse ($this->leaderboard as $index => $team)
             <div class="flex items-center gap-4 group">
-              <span class="font-mono font-bold w-6 text-sm">{{ $index + 1 }}</span>
+              <span class="font-mono font-bold w-6 text-sm">{{ Number::ordinal($index + 1) }}</span>
               <div class="flex-1 rounded-xl p-3 flex justify-between items-center border border-white/5 transition-colors">
                 <div class="flex items-center gap-3">
                   <img src="{{ $team->avatar ? asset('uploads/' . $team->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($team->name) }}" class="w-8 h-8 rounded-lg" alt="user">
