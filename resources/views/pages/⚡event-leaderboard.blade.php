@@ -3,6 +3,7 @@
 use Livewire\Component;
 use App\Models\Event;
 use App\Models\Team;
+use App\Models\Competition;
 use Livewire\Attributes\Computed;
 use Illuminate\Support\Collection;
 
@@ -43,10 +44,45 @@ new #[Layout('layouts.guest')] class extends Component {
         return $this->leaderboard()->slice(3);
     }
 
+    #[Computed]
+    public function gameSummary(): Collection
+    {
+        return Competition::query()
+            ->where('competitions.event_id', $this->event->id)
+            ->with(['results' => function ($q) {
+                $q->with('team')->orderByDesc('score');
+            }])
+            ->get()
+            ->map(function ($competition) {
+                $sorted = $competition->results->sortByDesc('score')->values();
+                return (object) [
+                    'id'       => $competition->id,
+                    'name'     => $competition->name,
+                    'category' => $competition->category,
+                    'first'        => $sorted->get(0)?->team,
+                    'second'       => $sorted->get(1)?->team,
+                    'third'        => $sorted->get(2)?->team,
+                    'fourth'       => $sorted->get(3)?->team,
+                    'first_score'  => $sorted->get(0)?->score,
+                    'second_score' => $sorted->get(1)?->score,
+                    'third_score'  => $sorted->get(2)?->score,
+                    'fourth_score' => $sorted->get(3)?->score,
+                ];
+            });
+    }
+
     public function setTimeframe(string $timeframe): void
     {
         $this->timeframe = $timeframe;
     }
+
+    public function openSummary(): void
+    {
+        unset($this->gameSummary);
+        $this->modal('game-summary')->show();
+        $this->dispatch('open-modal', name: 'game-summary');
+    }
+
 
     public function mount(Event $event): void
     {
@@ -55,29 +91,29 @@ new #[Layout('layouts.guest')] class extends Component {
 };
 ?>
 
-<div class="flex flex-col lg:flex-row gap-8 items-start justify-center">
+<div class="flex flex-col lg:flex-row gap-8 items-start justify-center" wire:poll.6000ms>
   <div class="w-full max-w-4xl bg-[#121212] rounded-[2.5rem] shadow-2xl">
     
     <header class="flex md:flex-row justify-between items-start md:items-center mb-12 gap-4">
       <div class="flex justify-between items-center gap-3">
-        {{-- <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center border border-yellow-500/50">
-           <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Lucky" class="w-6 h-6" alt="logo">
-        </div> --}}
         <div> 
             <h1 class="text-xl font-bold text-[#e5b64b]">{{ $event->name }}</h1>
             <h1 class="text-xs font-bold text-[#fafafa]">{{ $event->description }}</h1>
         </div>
-        <flux:badge color="lime" te>Live</flux:badge> 
+        <flux:badge color="lime">Live</flux:badge> 
       </div>
       <div class="flex items-center gap-3"> 
-          <flux:button 
+          {{-- Game Summary Button --}}
+          <flux:modal.trigger name="game-summary">
+              <flux:button variant="primary" icon="trophy" wire:click="openSummary">Game Summary</flux:button>
+          </flux:modal.trigger>
+
+          {{-- <flux:button 
               variant="primary" 
               wire:navigate 
               href="/" 
               icon="arrow-left"
-          >
-              <span class="hidden sm:inline">Back to Homepage</span>
-          </flux:button>
+          >Back to Homepage</flux:button> --}}
         </div>  
     </header>
 
@@ -93,7 +129,6 @@ new #[Layout('layouts.guest')] class extends Component {
           @if ($second)
             <div class="relative bg-[#3d3d3d] rounded-l-3xl rounded-r-full p-3 flex items-center gap-6 group hover:translate-x-2 transition-transform cursor-pointer">
               <div class="absolute -top-2 -left-4 text-4xl">🥈</div>
-              
               <img src="{{ $second->avatar ? asset('storage/' . $second->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($second->name) }}" class="w-20 h-20 rounded-full bg-[#555]" alt="avatar"> 
               <div>
                 <div class="flex items-baseline gap-2">
@@ -110,7 +145,6 @@ new #[Layout('layouts.guest')] class extends Component {
           @if ($first) 
             <div class="relative bg-[#6b6141] rounded-l-3xl rounded-r-full p-6 flex items-center gap-6 group hover:translate-x-2 transition-transform cursor-pointer">
               <div class="absolute -top-2 -left-4 text-5xl">🥇</div>
-              
               <img src="{{ $first->avatar ? asset('storage/' . $first->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($first->name) }}" class="w-24 h-24 rounded-full bg-[#837651]" alt="avatar">
               <div>
                 <div class="flex items-baseline gap-2">
@@ -127,7 +161,6 @@ new #[Layout('layouts.guest')] class extends Component {
           @if ($third) 
             <div class="relative bg-[#4a3a3a] rounded-l-3xl rounded-r-full p-3 flex items-center gap-6 group hover:translate-x-2 transition-transform cursor-pointer">
               <div class="absolute -top-2 -left-4 text-3xl">🥉</div>
-              
               <img src="{{ $third->avatar ? asset('storage/' . $third->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($third->name) }}" class="w-20 h-20 rounded-full bg-[#555]" alt="avatar"> 
               <div>
                 <div class="flex items-baseline gap-2">
@@ -160,7 +193,6 @@ new #[Layout('layouts.guest')] class extends Component {
                     <span class="text-[10px] text-gray-500 uppercase">{{ $team->represents }}</span>
                   </div>
                 </div>
-                
                 <div class="flex items-center gap-3">
                     <div class="w-2 h-2 rounded-full" style="background-color: {{ $team->color }}"></div>
                     <div class="text-[#e5b64b] font-mono font-bold text-sm">{{ number_format($team->total_score) }} <span class="text-[10px] opacity-60">PTS</span></div>
@@ -175,4 +207,120 @@ new #[Layout('layouts.guest')] class extends Component {
       </div> 
     </div>
   </div>
+
+
+  {{-- ─── Game Summary Modal ────────────────────────────────────────────── --}}
+  <flux:modal name="game-summary" class="w-full max-w-3xl" style="background: #1a1a1a;">
+    <div class="flex flex-col gap-6">
+
+      {{-- Modal Header --}}
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">🏆</span>
+        <div>
+          <flux:heading size="lg" class="text-[#e5b64b]">Game Summary</flux:heading>
+          <flux:subheading>Winners per competition — {{ $event->name }}</flux:subheading>
+        </div>
+      </div>
+
+      {{-- Table --}}
+      @if ($this->gameSummary->isEmpty())
+        <div class="text-center py-16">
+          <p class="text-gray-500 text-sm">No competition results recorded yet.</p>
+        </div>
+      @else
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border-separate" style="border-spacing: 0 6px;">
+            <thead>
+              <tr>
+                <th class="text-left text-[10px] font-bold uppercase tracking-widest text-gray-600 pb-2 pl-3">Competition</th>
+                <th class="text-left text-[10px] font-bold uppercase tracking-widest text-gray-600 pb-2 pl-3">Category</th>
+                <th class="text-center text-[10px] font-bold uppercase tracking-widest text-yellow-500 pb-2">1st</th>
+                <th class="text-center text-[10px] font-bold uppercase tracking-widest text-gray-400 pb-2">2nd</th>
+                <th class="text-center text-[10px] font-bold uppercase tracking-widest text-amber-700 pb-2">3rd</th>
+                <th class="text-center text-[10px] font-bold uppercase tracking-widest text-gray-600 pb-2">4th</th>
+              </tr>
+            </thead>
+            <tbody>
+              @foreach ($this->gameSummary as $comp)
+                <tr class="group">
+                  <td class="group-hover:bg-gray-200 transition-colors rounded-l-xl px-4 py-3 font-semibold text-gray-500 whitespace-nowrap">
+                    {{ $comp->name }}
+                  </td>
+                  <td class="group-hover:bg-gray-200 transition-colors px-3 py-3">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500 bg-white/5 px-2 py-1 rounded-full">
+                      {{ $comp->category }}
+                    </span>
+                  </td>
+
+                  {{-- 1st --}}
+                  <td class="group-hover:bg-gray-200 transition-colors px-3 py-3 text-center">
+                    @if ($comp->first)
+                      <div class="flex flex-col items-center gap-1">
+                        <img src="{{ $comp->first->avatar ? asset('storage/' . $comp->first->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($comp->first->name) }}" class="w-7 h-7 rounded-full ring-2 ring-yellow-500/60" alt="{{ $comp->first->name }}">
+                        <span class="text-[11px] font-bold text-yellow-400 leading-tight">{{ $comp->first->name }}</span>
+                        <span class="text-[10px] text-gray-600 font-mono">{{ number_format($comp->first_score) }}</span>
+                      </div>
+                    @else
+                      <span class="text-gray-700 text-xs">—</span>
+                    @endif
+                  </td>
+
+                  {{-- 2nd --}}
+                  <td class="group-hover:bg-gray-200 transition-colors px-3 py-3 text-center">
+                    @if ($comp->second)
+                      <div class="flex flex-col items-center gap-1">
+                        <img src="{{ $comp->second->avatar ? asset('storage/' . $comp->second->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($comp->second->name) }}" class="w-7 h-7 rounded-full ring-2 ring-gray-400/50" alt="{{ $comp->second->name }}">
+                        <span class="text-[11px] font-bold text-gray-300 leading-tight">{{ $comp->second->name }}</span>
+                        <span class="text-[10px] text-gray-600 font-mono">{{ number_format($comp->second_score) }}</span>
+                      </div>
+                    @else
+                      <span class="text-gray-700 text-xs">—</span>
+                    @endif
+                  </td>
+
+                  {{-- 3rd --}}
+                  <td class="group-hover:bg-gray-200 transition-colors px-3 py-3 text-center">
+                    @if ($comp->third)
+                      <div class="flex flex-col items-center gap-1">
+                        <img src="{{ $comp->third->avatar ? asset('storage/' . $comp->third->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($comp->third->name) }}" class="w-7 h-7 rounded-full ring-2 ring-amber-700/50" alt="{{ $comp->third->name }}">
+                        <span class="text-[11px] font-bold text-amber-600 leading-tight">{{ $comp->third->name }}</span>
+                        <span class="text-[10px] text-gray-600 font-mono">{{ number_format($comp->third_score) }}</span>
+                      </div>
+                    @else
+                      <span class="text-gray-700 text-xs">—</span>
+                    @endif
+                  </td>
+
+                  {{-- 4th --}}
+                  <td class="group-hover:bg-gray-200 transition-colors rounded-r-xl px-3 py-3 text-center">
+                    @if ($comp->fourth)
+                      <div class="flex flex-col items-center gap-1">
+                        <img src="{{ $comp->fourth->avatar ? asset('storage/' . $comp->fourth->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($comp->fourth->name) }}" class="w-7 h-7 rounded-full ring-2 ring-gray-700/50" alt="{{ $comp->fourth->name }}">
+                        <span class="text-[11px] font-bold text-gray-500 leading-tight">{{ $comp->fourth->name }}</span>
+                        <span class="text-[10px] text-gray-600 font-mono">{{ number_format($comp->fourth_score) }}</span>
+                      </div>
+                    @else
+                      <span class="text-gray-700 text-xs">—</span>
+                    @endif
+                  </td>
+                </tr>
+              @endforeach
+            </tbody>
+          </table>
+        </div>
+      @endif
+
+      {{-- Footer --}}
+      <div class="flex justify-between items-center pt-2 border-t border-white/5">
+        <span class="text-xs text-gray-600">
+          {{ $this->gameSummary->count() }} competition{{ $this->gameSummary->count() !== 1 ? 's' : '' }} total
+        </span>
+        <flux:modal.close>
+          <flux:button variant="primary" size="sm">Close</flux:button>
+        </flux:modal.close>
+      </div>
+
+    </div>
+  </flux:modal>
+
 </div>

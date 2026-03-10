@@ -47,7 +47,7 @@
             <p class="text-gray-400 text-sm mb-6">{{ $event->description }}</p>
             
             {{-- Dynamically inject the Event UUID into the URL --}}
-            <flux:button wire:navigate href="/leaderboards/{{ $event->id }}" class="w-full bg-white/5 group-hover:bg-yellow-500 group-hover:text-black py-4 rounded-2xl font-bold transition-colors flex justify-center items-center gap-2">
+            <flux:button wire:navigate href="/leaderboards/{{ $event->id }}" variant="outline" class="w-full group-hover:bg-yellow-500 group-hover:text-black py-4 rounded-2xl font-bold transition-colors flex justify-center items-center gap-2">
               View Leaderboard
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
