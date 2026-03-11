@@ -127,7 +127,7 @@ new class extends Component {
             $this->getEventComps();
             $this->showDeleteConfirm = false;
             $this->isDeletingComp = null;
-            $this->toastSuccess('Error!', 'Competition removed');
+            $this->toastSuccess('Success!', 'Competition removed.');
         }
     }
 };
@@ -135,7 +135,7 @@ new class extends Component {
 
 <div>
     <section class="space-y-4">
-        <div class="flex items:center justify-between">
+        <div class="flex items-center justify-between">
             <flux:heading size="xl">Competitions</flux:heading>
             <flux:button wire:click="openCompModal" wire:loading.attr="disabled" wire:target="openCompModal" icon="plus">
                 Add Competition</flux:button>
@@ -173,12 +173,12 @@ new class extends Component {
                                 <flux:button 
                                     wire:click="editComp('{{ $comp->id }}')" 
                                     wire:loading.attr="disabled"
-                                    wire:target="editComp({{ $comp->id }})" 
+                                    wire:target="editComp('{{ $comp->id }}')"
                                     icon="pencil-square" variant="ghost" />
                                 <flux:button 
                                     wire:click="confirmDeleteComp('{{ $comp->id }}')"
                                     wire:loading.attr="disabled" 
-                                    wire:target="confirmDeleteComp({{ $comp->id }})"
+                                    wire:target="confirmDeleteComp('{{ $comp->id }}')"
                                     icon="trash" variant="ghost" /> 
                             </flux:table.cell>
                         </flux:table.row>
@@ -214,7 +214,7 @@ new class extends Component {
         <form wire:submit.prevent="deleteComp">
             <div class="space-y-6">
                 <flux:heading size="lg">Delete Competition</flux:heading>
-                <flux:text>You;&rsquo;re about to delete this competition. This action cannot be reversed.</flux:text>
+                <flux:text>You&rsquo;re about to delete this competition. This action cannot be reversed.</flux:text>
                 <div class="flex gap-2">
                     <flux:spacer />
                     <flux:modal.close>

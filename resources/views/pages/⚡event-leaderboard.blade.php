@@ -16,7 +16,26 @@ new #[Layout('layouts.guest')] class extends Component {
     #[Computed]
     public function leaderboard(): Collection
     {
-        return Team::query()->where('event_id', $this->event->id)->leftJoin('results', 'teams.id', '=', 'results.team_id')->select('teams.id', 'teams.name', 'teams.color', 'teams.avatar', 'teams.represents', \DB::raw('COALESCE(SUM(results.score), 0) as total_score'), \DB::raw('COUNT(DISTINCT results.competition_id) as competitions_participated'))->groupBy('teams.id', 'teams.name', 'teams.color', 'teams.avatar', 'teams.represents')->orderByDesc('total_score')->orderBy('teams.name')->get();
+        return Team::query()
+            ->where('teams.event_id', $this->event->id)
+            ->leftJoin('results', 'teams.id', '=', 'results.team_id')
+            ->leftJoin('competitions', function ($join) {
+                $join->on('results.competition_id', '=', 'competitions.id')
+                    ->whereNull('competitions.deleted_at');
+            })
+            ->select(
+                'teams.id',
+                'teams.name',
+                'teams.color',
+                'teams.avatar',
+                'teams.represents',
+                \DB::raw('COALESCE(SUM(CASE WHEN competitions.id IS NOT NULL THEN results.score ELSE 0 END), 0) as total_score'),
+                \DB::raw('COUNT(DISTINCT CASE WHEN competitions.id IS NOT NULL THEN results.competition_id END) as competitions_participated')
+            )
+            ->groupBy('teams.id', 'teams.name', 'teams.color', 'teams.avatar', 'teams.represents')
+            ->orderByDesc('total_score')
+            ->orderBy('teams.name')
+            ->get();
     }
 
     #[Computed]
@@ -26,35 +45,48 @@ new #[Layout('layouts.guest')] class extends Component {
             return null;
         }
 
-        $results = \App\Models\Result::query()->where('team_id', $this->selectedTeamId)->whereHas('competition', fn($q) => $q->where('event_id', $this->event->id))->with('competition')->get();
+        $results = \App\Models\Result::query()
+            ->where('team_id', $this->selectedTeamId)
+            ->whereHas('competition', fn($q) => $q
+                ->where('event_id', $this->event->id)
+                ->whereNull('deleted_at')
+            )
+            ->with(['competition' => fn($q) => $q->whereNull('deleted_at')])
+            ->get();
 
-        $team = \App\Models\Team::find($this->selectedTeamId);
-
-        $total = $results->sum('score');
+        $team         = \App\Models\Team::find($this->selectedTeamId);
+        $total        = $results->sum('score');
         $competitions = $results->count();
-        $avg = $competitions > 0 ? round($total / $competitions) : 0;
-        $highest = $results->max('score') ?? 0;
-        $lowest = $results->min('score') ?? 0;
-        $wins = $results->where('is_winner', true)->count();
-        $losses = $competitions - $wins;
-        $winRate = $competitions > 0 ? round(($wins / $competitions) * 100) : 0;
+        $avg          = $competitions > 0 ? round($total / $competitions) : 0;
+        $highest      = $results->max('score') ?? 0;
+        $lowest       = $results->min('score') ?? 0;
 
         $history = $results
             ->sortByDesc('score')
             ->map(function ($result) {
-                $placement = \App\Models\Result::where('competition_id', $result->competition_id)->where('score', '>', $result->score)->count() + 1;
+                $placement = \App\Models\Result::where('competition_id', $result->competition_id)
+                    ->where('score', '>', $result->score)
+                    ->count() + 1;
 
                 return (object) [
                     'competition' => $result->competition->name,
-                    'category' => $result->competition->category,
-                    'score' => $result->score,
-                    'placement' => $placement,
-                    'is_winner' => $result->is_winner,
+                    'category'    => $result->competition->category,
+                    'score'       => $result->score,
+                    'placement'   => $placement,
                 ];
             })
             ->values();
 
-        return (object) compact('team', 'total', 'competitions', 'avg', 'highest', 'lowest', 'wins', 'losses', 'winRate', 'history');
+        $gold    = $history->where('placement', 1)->count();
+        $silver  = $history->where('placement', 2)->count();
+        $bronze  = $history->where('placement', 3)->count();
+        $fourth  = $history->where('placement', 4)->count();
+        $winRate = $competitions > 0 ? round(($gold / $competitions) * 100) : 0;
+
+        return (object) compact(
+            'team', 'total', 'competitions', 'avg', 'highest', 'lowest',
+            'gold', 'silver', 'bronze', 'fourth', 'winRate', 'history'
+        );
     }
 
     #[Computed]
@@ -74,6 +106,7 @@ new #[Layout('layouts.guest')] class extends Component {
     {
         return Competition::query()
             ->where('competitions.event_id', $this->event->id)
+            ->whereNull('competitions.deleted_at')
             ->with([
                 'results' => function ($q) {
                     $q->with('team')->orderByDesc('score');
@@ -83,16 +116,16 @@ new #[Layout('layouts.guest')] class extends Component {
             ->map(function ($competition) {
                 $sorted = $competition->results->sortByDesc('score')->values();
                 return (object) [
-                    'id' => $competition->id,
-                    'name' => $competition->name,
-                    'category' => $competition->category,
-                    'first' => $sorted->get(0)?->team,
-                    'second' => $sorted->get(1)?->team,
-                    'third' => $sorted->get(2)?->team,
-                    'fourth' => $sorted->get(3)?->team,
-                    'first_score' => $sorted->get(0)?->score,
+                    'id'           => $competition->id,
+                    'name'         => $competition->name,
+                    'category'     => $competition->category,
+                    'first'        => $sorted->get(0)?->team,
+                    'second'       => $sorted->get(1)?->team,
+                    'third'        => $sorted->get(2)?->team,
+                    'fourth'       => $sorted->get(3)?->team,
+                    'first_score'  => $sorted->get(0)?->score,
                     'second_score' => $sorted->get(1)?->score,
-                    'third_score' => $sorted->get(2)?->score,
+                    'third_score'  => $sorted->get(2)?->score,
                     'fourth_score' => $sorted->get(3)?->score,
                 ];
             });
@@ -133,7 +166,10 @@ new #[Layout('layouts.guest')] class extends Component {
                     <h1 class="text-xs font-bold">{{ $event->description }}</h1>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3"> 
+                <div wire:loading.delay>
+                    <flux:icon.loading /> 
+                </div>
                 <flux:button variant="subtle" square x-data x-on:click="$flux.dark = ! $flux.dark">
                   <flux:icon.sun class="dark:hidden" />
                   <flux:icon.moon class="hidden dark:block" />
@@ -143,8 +179,7 @@ new #[Layout('layouts.guest')] class extends Component {
         </header>
 
 
-        <flux:button class="my-4" icon="trophy" wire:click.="openSummary">Game Summary</flux:button>
-
+        <flux:button class="my-4" icon="trophy" wire:click.="openSummary">Game Summary</flux:button> 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div class="space-y-4">
                 @if ($this->topThree->isNotEmpty())
@@ -274,7 +309,7 @@ new #[Layout('layouts.guest')] class extends Component {
             {{-- Table --}}
             @if ($this->gameSummary->isEmpty())
                 <div class="text-center py-16">
-                    <p class=text-sm">No competition results recorded yet.</p>
+                    <p class="text-sm">No competition results recorded yet.</p>
                 </div>
             @else
                 <div class="overflow-x-auto">
@@ -413,43 +448,70 @@ new #[Layout('layouts.guest')] class extends Component {
                     @if ($s->team->represents)
                         <div class="text-xs opacity-50 mt-0.5">{{ $s->team->represents }}</div>
                     @endif
-                </div>
-                {{-- <div class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: {{ $s->team->color }}"></div> --}}
+                </div> 
             </div>
 
             {{-- Body --}}
-            <div class="pt-5 space-y-4">
+            <div class="pt-5 space-y-5">
 
                 {{-- Performance Overview --}}
                 <p class="text-xs uppercase tracking-widest opacity-40 font-semibold">Performance Overview</p>
-                <div class="grid grid-cols-3 gap-2">
-                    @foreach ([['Total Points', $s->total, true], ['Competitions', $s->competitions, false], ['Avg Score', $s->avg, false], ['Highest Score', $s->highest, false], ['Lowest Score', $s->lowest, false], ['Wins', $s->wins, false]] as [$label, $value, $accent])
-                        <div class="rounded-xl p-4 text-center">
-                            <div class="text-xl font-bold {{ $accent ? 'text-[#e5b64b]' : '' }}">
+                <div class="grid grid-cols-4 gap-2">
+                    @foreach ([
+                        ['Total Points',  number_format($s->total),  true],
+                        ['Competitions',  $s->competitions,           false],
+                        ['Avg Score',     number_format($s->avg),     false],
+                        ['Highest',       number_format($s->highest), false],
+                    ] as [$label, $value, $accent])
+                        <div class="bg-zinc-100 dark:bg-zinc-800 rounded-xl p-3 text-center">
+                            <div class="text-lg font-bold font-mono {{ $accent ? 'text-[#e5b64b]' : '' }}">
                                 {{ $value }}
                             </div>
-                            <div class="text-xs opacity-40 uppercase tracking-wide mt-1">{{ $label }}</div>
+                            <div class="text-[10px] opacity-40 uppercase tracking-wide mt-1">{{ $label }}</div>
                         </div>
                     @endforeach
                 </div>
 
+                {{-- Placement Distribution --}}
+                <p class="text-xs uppercase tracking-widest opacity-40 font-semibold">Placement Distribution</p>
+                <div class="bg-zinc-100 dark:bg-zinc-800 rounded-xl p-4 grid grid-cols-4 gap-2 text-center">
+                    <div>
+                        <div class="text-2xl font-bold font-mono text-yellow-400">{{ $s->gold }}</div>
+                        <div class="text-[10px] opacity-50 mt-1">🥇 1st</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold font-mono text-zinc-400">{{ $s->silver }}</div>
+                        <div class="text-[10px] opacity-50 mt-1">🥈 2nd</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold font-mono text-amber-600">{{ $s->bronze }}</div>
+                        <div class="text-[10px] opacity-50 mt-1">🥉 3rd</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold font-mono opacity-40">{{ $s->fourth }}</div>
+                        <div class="text-[10px] opacity-50 mt-1">4th</div>
+                    </div>
+                </div>
+
+                <div class="h-px bg-zinc-200 dark:bg-zinc-700"></div>
+
                 {{-- Win Rate --}}
-                <div class="rounded-xl p-4">
-                    <div class="flex justify-between items-center mb-3">
+                <div class="bg-zinc-100 dark:bg-zinc-800 rounded-xl p-4 space-y-3">
+                    <div class="flex justify-between items-center">
                         <span class="text-sm opacity-60">Win Rate</span>
-                        <span class="text-lg font-bold text-[#e5b64b]">{{ $s->winRate }}%</span>
+                        <span class="text-lg font-bold font-mono text-[#e5b64b]">{{ $s->winRate }}%</span>
                     </div>
                     <div class="w-full h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
-                        <div class="h-full bg-[#e5b64b] rounded-full" style="width: {{ $s->winRate }}%"></div>
+                        <div class="h-full bg-[#e5b64b] rounded-full transition-all" style="width: {{ $s->winRate }}%"></div>
                     </div>
-                    <div class="flex gap-4 mt-3">
+                    <div class="flex gap-4">
                         <div class="flex items-center gap-1.5 text-xs opacity-50">
-                            <div class="w-1.5 h-1.5 rounded-full bg-[#e5b64b]"></div>
-                            {{ $s->wins }} Wins
+                            <div class="w-1.5 h-1.5 rounded-full bg-yellow-400"></div>
+                            {{ $s->gold }} Wins
                         </div>
                         <div class="flex items-center gap-1.5 text-xs opacity-50">
                             <div class="w-1.5 h-1.5 rounded-full bg-zinc-400"></div>
-                            {{ $s->losses }} Losses
+                            {{ $s->competitions - $s->gold }} Non-wins
                         </div>
                         <div class="flex items-center gap-1.5 text-xs opacity-50">
                             <div class="w-1.5 h-1.5 rounded-full bg-zinc-600"></div>
@@ -471,27 +533,30 @@ new #[Layout('layouts.guest')] class extends Component {
                                 3 => '3rd',
                                 default => $item->placement . 'th',
                             };
-                            $placementClass = match ($item->placement) {
+                            $borderColor = match ($item->placement) {
+                                1 => 'border-yellow-500',
+                                2 => 'border-zinc-400',
+                                3 => 'border-amber-700',
+                                default => 'border-zinc-700',
+                            };
+                            $badgeClass = match ($item->placement) {
                                 1 => 'text-yellow-400 bg-yellow-900/30 border-yellow-700/40',
-                                2 => 'bg-zinc-500/10 border-zinc-500/20',
+                                2 => 'text-zinc-300 bg-zinc-500/10 border-zinc-500/20',
                                 3 => 'text-amber-600 bg-amber-900/20 border-amber-700/30',
-                                default => 'bg-zinc-500/10 border-zinc-500/10',
+                                default => 'text-zinc-500 bg-zinc-500/10 border-zinc-500/10',
                             };
                         @endphp
-                        <div
-                            class="flex items-center gap-3 px-3 py-2.5 rounded-lg border-l-2 {{ $item->is_winner ? 'border-[#e5b64b]' : 'border-zinc-700' }} hover:bg-zinc-500/10 transition-colors">
+                        <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg border-l-2 {{ $borderColor }} hover:bg-zinc-500/10 transition-colors">
                             <div class="flex-1 min-w-0">
                                 <div class="text-sm font-semibold truncate">{{ $item->competition }}</div>
                                 @if ($item->category)
-                                    <div class="text-xs opacity-40 uppercase tracking-wide mt-0.5">
-                                        {{ $item->category }}</div>
+                                    <div class="text-[10px] opacity-40 uppercase tracking-wide mt-0.5">{{ $item->category }}</div>
                                 @endif
                             </div>
-                            <div class="text-sm font-bold text-[#e5b64b] min-w-[52px] text-right font-mono">
-                                {{ $item->score }} pts
+                            <div class="text-sm font-bold text-[#e5b64b] font-mono min-w-[56px] text-right shrink-0">
+                                {{ number_format($item->score) }} pts
                             </div>
-                            <span
-                                class="text-xs font-bold px-2 py-0.5 rounded border min-w-[34px] text-center {{ $placementClass }}">
+                            <span class="text-xs font-bold px-2 py-0.5 rounded border min-w-[34px] text-center {{ $badgeClass }}">
                                 {{ $placementLabel }}
                             </span>
                         </div>
@@ -511,5 +576,4 @@ new #[Layout('layouts.guest')] class extends Component {
 
         @endif
     </flux:modal>
-
 </div>

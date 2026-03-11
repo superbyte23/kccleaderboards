@@ -77,137 +77,136 @@ new class extends Component
     }
 };
 ?>
-
-<div class="">
+<div>
     {{-- Header --}}
-    <div class="flex items-center justify-between mb-8">
+    <div class="flex items-start justify-between mb-6">
         <div>
-            <h1 class="text-4xl font-bold text-gray-900 mb-2">{{ $competition->name }}</h1>
-            <p class="text-gray-600">Competition Leaderboard</p>
+            <flux:heading size="xl">{{ $competition->name }}</flux:heading>
+            <flux:subheading>Competition Leaderboard</flux:subheading>
         </div>
-
         <flux:button
             href="{{ route('event-dashboard', $competition->event) }}"
-            variant="outline"
+            variant="ghost"
+            icon="arrow-left"
             wire:navigate
         >
-            Back to Event Dashboard
+            Back to Event
         </flux:button>
     </div>
-    {{-- Edit Mode Toggle --}}
+
+    {{-- Actions --}}
     <div class="mb-6">
         <flux:button
             wire:click="toggleScoreModal"
             variant="primary"
+            icon="pencil-square"
         >
             Edit Scores
         </flux:button>
     </div>
 
-    {{-- Winner Badge --}}
+    {{-- Current Leader --}}
     @if($winner = $this->getWinner())
-        <div class="mb-8 p-6 rounded-lg shadow-lg" style="background: linear-gradient(135deg, {{ $winner['team_color'] }} 0%, {{ $winner['team_color'] }}dd 100%); border: 3px solid {{ $winner['team_color'] }};">
-            <div class="text-center">
-                <p class="text-white font-semibold mb-1 drop-shadow-lg">🏆 CURRENT LEADER 🏆</p>
-                <p class="text-3xl font-bold text-white drop-shadow-lg">{{ $winner['team_name'] }}</p>
-                <p class="text-2xl font-bold text-white drop-shadow-lg">Score: {{ $winner['score'] }}</p>
+        <div class="mb-6 rounded-xl p-5 flex items-center gap-4 border-l-4"
+            style="border-color: {{ $winner['team_color'] }}; background-color: {{ $winner['team_color'] }}18;">
+            <span class="text-4xl">🏆</span>
+            <div>
+                <div class="text-xs uppercase tracking-widest opacity-60 font-semibold mb-0.5">Current Leader</div>
+                <div class="text-2xl font-bold" style="color: {{ $winner['team_color'] }}">
+                    {{ $winner['team_name'] }}
+                </div>
+                <div class="text-sm font-mono font-bold opacity-70">
+                    {{ number_format($winner['score']) }} pts
+                </div>
             </div>
         </div>
     @endif
 
-    {{-- Leaderboard Table --}}
-    <div class="overflow-x-auto bg-white rounded-lg shadow">
-        <table class="w-full">
-            <thead>
-                <tr class="bg-gray-100 border-b-2 border-gray-300">
-                    <th class="px-6 py-4 text-left font-semibold text-gray-900">Rank</th>
-                    <th class="px-6 py-4 text-left font-semibold text-gray-900">Team</th>
-                    <th class="px-6 py-4 text-center font-semibold text-gray-900">Score</th>
-                    {{-- @if($editMode)
-                        <th class="px-6 py-4 text-center font-semibold text-gray-900">Action</th>
-                    @endif --}}
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($scores as $index => $scoreData)
-                    <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors
-                        @if($loop->first) bg-yellow-50 @endif">
-                        <td class="px-6 py-4">
-                            <span class="text-lg font-bold text-gray-700">
+    {{-- Leaderboard --}}
+    @if(!empty($scores))
+        <flux:card>
+            <flux:table>
+                <flux:table.columns>
+                    <flux:table.column>Rank</flux:table.column>
+                    <flux:table.column>Team</flux:table.column>
+                    <flux:table.column class="text-right">Score</flux:table.column>
+                </flux:table.columns>
+                <flux:table.rows>
+                    @foreach($scores as $index => $scoreData)
+                        <flux:table.row wire:key="score-{{ $scoreData['team_id'] }}">
+                            <flux:table.cell>
                                 @if($loop->first)
-                                    🥇 1st
+                                    <span class="text-lg">🥇</span>
                                 @elseif($loop->iteration === 2)
-                                    🥈 2nd
+                                    <span class="text-lg">🥈</span>
                                 @elseif($loop->iteration === 3)
-                                    🥉 3rd
+                                    <span class="text-lg">🥉</span>
                                 @else
-                                    {{ $loop->iteration }}
+                                    <flux:badge variant="subtle">{{ $loop->iteration }}</flux:badge>
                                 @endif
-                            </span>
-                        </td>
-                        <td class="px-6 py-4">
-                            <span class="flex items-center">
-                                <span
-                                    class="w-4 h-4 rounded-full mr-3 border-2 border-gray-400"
-                                    style="background-color: {{ $scoreData['team_color'] ?? '#999' }}"
-                                ></span>
-                                <span class="font-semibold text-gray-900">{{ $scoreData['team_name'] }}</span>
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <span class="text-2xl font-bold text-gray-900">{{ $scoreData['score'] }}</span>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-
-    {{-- Empty State --}}
-    @if(empty($scores))
-        <div class="text-center py-12 bg-gray-50 rounded-lg">
-            <p class="text-gray-600 text-lg">No teams registered for this competition yet.</p>
-        </div>
+                            </flux:table.cell>
+                            <flux:table.cell>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-3 h-3 rounded-full shrink-0"
+                                        style="background-color: {{ $scoreData['team_color'] ?? '#64748b' }}">
+                                    </div>
+                                    <span class="font-semibold">{{ $scoreData['team_name'] }}</span>
+                                </div>
+                            </flux:table.cell>
+                            <flux:table.cell class="text-right">
+                                <span class="text-xl font-bold font-mono text-[#e5b64b]">
+                                    {{ number_format($scoreData['score']) }}
+                                </span>
+                            </flux:table.cell>
+                        </flux:table.row>
+                    @endforeach
+                </flux:table.rows>
+            </flux:table>
+        </flux:card>
+    @else
+        <flux:card class="text-center py-12">
+            <flux:heading>No scores yet</flux:heading>
+            <flux:subheading class="mt-1">No teams registered for this competition yet.</flux:subheading>
+        </flux:card>
     @endif
 
     {{-- Score Input Modal --}}
     <flux:modal wire:model="showScoreModal" :dismissible="false" flyout>
         <div class="space-y-6">
+
+            {{-- Modal Header --}}
             <div>
                 <flux:heading size="lg">Enter Scores</flux:heading>
                 <flux:subheading>Update scores for all teams in {{ $competition->name }}</flux:subheading>
             </div>
 
-            <div class="flex flex-col gap-4">
+            {{-- Score Inputs --}}
+            <div class="space-y-3">
                 @foreach($teamsForInput as $teamData)
-                    <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="flex items-center">
-                                <span
-                                    class="w-4 h-4 rounded-full mr-3 border-2 border-gray-400"
-                                    style="background-color: {{ $teamData['team_color'] ?? '#999' }}"
-                                ></span>
-                                <span class="font-semibold text-gray-900">{{ $teamData['team_name'] }}</span>
-                            </span>
+                    <div class="flex items-center gap-4 p-3 rounded-xl bg-zinc-100 dark:bg-zinc-800">
+                        <div class="w-3 h-3 rounded-full shrink-0"
+                            style="background-color: {{ $teamData['team_color'] ?? '#64748b' }}">
                         </div>
-                        <div class="flex items-center gap-2">
-                            <label class="text-gray-700 font-medium text-sm">Score:</label>
-                            <input
+                        <span class="font-semibold flex-1 text-sm">{{ $teamData['team_name'] }}</span>
+                        <div class="w-32">
+                            <flux:input
                                 type="number"
                                 wire:change="updateScore('{{ $teamData['team_id'] }}', $event.target.value)"
                                 value="{{ $teamData['score'] }}"
-                                class="flex-1 px-3 py-2 border border-gray-300 rounded text-center font-bold text-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                                 min="0"
+                                size="sm"
+                                input:class="text-center font-bold font-mono"
                             />
                         </div>
                     </div>
                 @endforeach
             </div>
 
-            <div class="flex justify-end">
-                <flux:spacer />
-                <flux:button wire:click="toggleScoreModal" variant="ghost">Done</flux:button>
+            {{-- Footer --}}
+            <div class="flex justify-end pt-2">
+                <flux:button wire:click="toggleScoreModal" variant="primary">Done</flux:button>
             </div>
+
         </div>
     </flux:modal>
 </div>
