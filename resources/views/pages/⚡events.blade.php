@@ -119,7 +119,7 @@ new class extends Component {
     }
 }; ?>
 
-<div class="p-6 space-y-6">
+<div class="space-y-6">
     <!-- Header -->
     <div class="flex justify-between items-center">
         <h1 class="text-3xl font-bold">Events Management</h1>

@@ -32,6 +32,7 @@ new class extends Component {
         $this->competitions = $this->event
             ->competitions()
             ->with(['results.team']) // Eager load to avoid N+1 issues
+            ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($comp) {
                 // Find the result with the highest score for this specific competition
@@ -141,9 +142,9 @@ new class extends Component {
                 Add Competition</flux:button>
         </div>
 
-        <flux:card>
-            <flux:table>
-                <flux:table.columns>
+        <flux:card class="overflow-x-auto">
+            <flux:table class="max-h-80">
+                <flux:table.columns sticky>
                     <flux:table.column>Activity</flux:table.column>
                     <flux:table.column>Category</flux:table.column>
                     <flux:table.column>Winner</flux:table.column>
@@ -200,6 +201,9 @@ new class extends Component {
                     <option value="Academic">Academic</option>
                     <option value="Creative Arts">Creative Arts</option>
                     <option value="Science and Tech">Science and Tech</option>
+                    <option value="Literary">Literary</option>
+                    <option value="Speech and Media Arts">Speech and Media Arts</option>
+                    <option value="Attendance">Attendance</option>
                 </flux:select>
                 <div class="flex gap-2 justify-end">
                     <flux:spacer />

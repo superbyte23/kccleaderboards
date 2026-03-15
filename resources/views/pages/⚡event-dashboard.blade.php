@@ -24,7 +24,7 @@ new class extends Component
 ?>
 
 <div>
-    <div class="p-8 space-y-8"> 
+    <div class="space-y-6"> 
         <livewire:events.leaderboard :event="$event" /> 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8"> 
             <livewire:events.teams :event="$event" />

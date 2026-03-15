@@ -157,7 +157,34 @@ new #[Layout('layouts.guest')] class extends Component {
 };
 ?>
 
-<div class="flex flex-col lg:flex-row gap-8 items-start justify-center" wire:poll.6000ms>
+<div class="flex flex-col lg:flex-row gap-8 items-start justify-center" wire:poll.60000ms>
+    <style>
+
+.pulse {  
+}
+
+.pulse::before {
+    content: ""; 
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: #e74c3c;
+    animation: ripple 1.8s infinite;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+</style>
     <div class="w-full max-w-6xl p-5"> 
         <header class="flex md:flex-row justify-between items-start md:items-center gap-4">
             <div class="flex justify-between items-center gap-3">
@@ -174,7 +201,13 @@ new #[Layout('layouts.guest')] class extends Component {
                   <flux:icon.sun class="dark:hidden" />
                   <flux:icon.moon class="hidden dark:block" />
                 </flux:button> 
-                <flux:badge color="red">Live</flux:badge>
+                <flux:badge color="lime" classs="gap-2">
+                Live
+                <span class="relative ms-2 flex size-3">
+                  <span class="absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span class="relative inline-flex size-3 pulse rounded-full bg-red-500"></span>
+                </span>
+                </flux:badge>
             </div>
         </header>
 
@@ -336,10 +369,10 @@ new #[Layout('layouts.guest')] class extends Component {
                             @foreach ($this->gameSummary as $comp)
                                 <tr class="group hover:bg-gray-200 hover:text-[#000]">
                                     <td
-                                        class="transition-colors rounded-l-xl px-4 py-3 font-semibold whitespace-nowrap">
+                                        class="transition-colors rounded-l-xl px-4 py-3 font-semibold">
                                         {{ $comp->name }}
                                     </td>
-                                    <td class="transition-colors px-3 py-3">
+                                    <td class="transition-colors text-center px-3 py-3">
                                         <span
                                             class="text-[10px] font-bold uppercase tracking-wider bg-white/5 px-2 py-1 rounded-full">
                                             {{ $comp->category }}

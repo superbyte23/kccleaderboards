@@ -24,7 +24,12 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
-        
+        if (app()->environment('production') && !file_exists(public_path('storage'))) {
+            app('files')->copyDirectory(
+                storage_path('app/public'),
+                public_path('storage')
+            );
+        }
     }
 
     /**

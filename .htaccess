@@ -1,0 +1,13 @@
+php_value display_errors Off
+php_value mbstring.http_input auto
+php_value date.timezone Asia/Manila
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Redirect all requests to public folder
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+    # Optional: force HTTPS
+    # Uncomment if your hosting supports SSL
+    # RewriteCond %{HTTPS} !=on
+    # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
