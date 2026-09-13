@@ -1,3 +1,5 @@
+import './avatar-upload.js';
+
 (() => {
     // Constellation / plexus background: drifting gold dots linked into
     // futuristic geometric shapes. Subtle by design; static when the user

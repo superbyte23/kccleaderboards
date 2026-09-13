@@ -76,7 +76,10 @@ new class extends Component
             'name' => 'required|string|max:255',
             'color' => 'required|string|max:7',
             'represents' => 'nullable|string|max:255',
-            'avatar' => 'nullable|image|max:2048', // Max 2MB
+            'avatar' => 'nullable|image|max:5120', // 5MB safety net; client compresses first
+        ], [
+            'avatar.max' => 'That image is still too large after compression (limit 5 MB). Please pick a smaller photo.',
+            'avatar.image' => 'The avatar must be a JPG, PNG, WebP or GIF image.',
         ]);
 
         $data = [
@@ -228,7 +231,7 @@ new class extends Component
 
                 <flux:field>
                     <flux:label>Team avatar</flux:label>
-                    <input type="file" wire:model="avatar" class="block w-full cursor-pointer rounded-xl border border-line bg-canvas-soft text-sm text-zinc-500 file:mr-4 file:border-0 file:bg-gold-400 file:px-4 file:py-2 file:text-sm file:font-bold file:text-gold-950 hover:file:bg-gold-300" />
+                    <input type="file" accept="image/*" x-data x-on:change="window.avatarCompress($event.target.files[0], $wire)" class="block w-full cursor-pointer rounded-xl border border-line bg-canvas-soft text-sm text-zinc-500 file:mr-4 file:border-0 file:bg-gold-400 file:px-4 file:py-2 file:text-sm file:font-bold file:text-gold-950 hover:file:bg-gold-300" />
                     @error('avatar') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
 
                     <div wire:loading wire:target="avatar" class="mt-1 text-xs text-gold-300">
