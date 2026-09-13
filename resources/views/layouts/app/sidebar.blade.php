@@ -18,9 +18,11 @@
                     <flux:sidebar.item icon="trophy" :href="route('events')" :current="request()->routeIs('events')" wire:navigate>
                         {{ __('Events') }}
                     </flux:sidebar.item>
-                    <flux:sidebar.item icon="users" :href="route('users')" :current="request()->routeIs('users')" wire:navigate>
-                        {{ __('Users') }}
-                    </flux:sidebar.item>
+                    @can('viewAny', \App\Models\User::class)
+                        <flux:sidebar.item icon="users" :href="route('users')" :current="request()->routeIs('users')" wire:navigate>
+                            {{ __('Users') }}
+                        </flux:sidebar.item>
+                    @endcan
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

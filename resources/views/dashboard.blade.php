@@ -1,10 +1,13 @@
 <x-layouts::app :title="__('Dashboard')">
     @php
-        $events = \App\Models\Event::withCount(['teams', 'competitions'])->latest()->get();
-        $liveCount = \App\Models\Event::whereDate('event_date', today())->count();
-        $upcomingCount = \App\Models\Event::where('event_date', '>', now())->count();
-        $totalTeams = \App\Models\Team::count();
-        $totalCompetitions = \App\Models\Competition::count();
+        $user = auth()->user();
+        $events = \App\Models\Event::query()
+            ->when(! $user->isAdmin(), fn ($q) => $q->where('user_id', $user->id))
+            ->withCount(['teams', 'competitions'])->latest()->get();
+        $liveCount = $events->where('event_date', today())->count();
+        $upcomingCount = $events->where('event_date', '>', now())->count();
+        $totalTeams = $events->sum('teams_count');
+        $totalCompetitions = $events->sum('competitions_count');
         $recentEvents = $events->take(4);
     @endphp
 
