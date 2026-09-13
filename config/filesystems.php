@@ -47,6 +47,19 @@ return [
             'report' => false,
         ],
 
+        // Avatars are served via asset('storage/...') which resolves to
+        // public/storage. Free hosting (InfinityFree) disables symlink(),
+        // so public/storage is a real directory there — this disk writes
+        // straight into it, so uploads are web-accessible on both setups.
+        'avatars' => [
+            'driver' => 'local',
+            'root' => public_path('storage'),
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

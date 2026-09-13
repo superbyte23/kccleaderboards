@@ -18,14 +18,14 @@ class OptimizeAvatars extends Command
 
     public function handle(): int
     {
-        $disk = Storage::disk('public');
+        $disk = Storage::disk('avatars');
 
         $files = collect($disk->files('avatars'))
             ->filter(fn (string $p): bool => preg_match('/\.(jpe?g|png|gif)$/i', $p) === 1)
             ->sort();
 
         if ($files->isEmpty()) {
-            $this->warn('No legacy avatars found in storage/app/public/avatars.');
+            $this->warn('No legacy avatars found in public/storage/avatars.');
 
             return self::SUCCESS;
         }
@@ -53,7 +53,6 @@ class OptimizeAvatars extends Command
                 DB::table('teams')->where('avatar', $file)->update(['avatar' => $to]);
 
                 $disk->put($to, $payload);
-                OptimizeAvatar::mirror($to, $payload);
                 OptimizeAvatar::delete($file);
 
                 $bytesAfter += strlen($payload);

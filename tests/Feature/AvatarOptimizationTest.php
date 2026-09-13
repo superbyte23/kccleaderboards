@@ -5,7 +5,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 test('OptimizeAvatar stores a 256x256 webp and removes the large original size', function () {
-    Storage::fake('public');
+    Storage::fake('avatars');
 
     $img = imagecreatetruecolor(1400, 900);
     $white = imagecolorallocate($img, 255, 255, 255);
@@ -20,9 +20,9 @@ test('OptimizeAvatar stores a 256x256 webp and removes the large original size',
 
     $path = OptimizeAvatar::run($upload);
 
-    Storage::disk('public')->assertExists($path);
+    Storage::disk('avatars')->assertExists($path);
 
-    $stored = Storage::disk('public')->path($path);
+    $stored = Storage::disk('avatars')->path($path);
     [$w, $h, $type] = getimagesize($stored);
 
     expect($w)->toBe(256)
@@ -45,7 +45,7 @@ test('OptimizeAvatar keeps square avatars square', function () {
 
     $path = OptimizeAvatar::run($upload);
 
-    $stored = Storage::disk('public')->path($path);
+    $stored = Storage::disk('avatars')->path($path);
     [$w, $h] = getimagesize($stored);
 
     expect($w)->toBe(256)
@@ -55,7 +55,7 @@ test('OptimizeAvatar keeps square avatars square', function () {
 });
 
 test('OptimizeAvatar saves directly from a file path', function () {
-    Storage::fake('public');
+    Storage::fake('avatars');
 
     $img = imagecreatetruecolor(300, 200);
     ob_start();
@@ -66,9 +66,9 @@ test('OptimizeAvatar saves directly from a file path', function () {
 
     $path = OptimizeAvatar::run($tmp);
 
-    Storage::disk('public')->assertExists($path);
+    Storage::disk('avatars')->assertExists($path);
 
-    [$w, $h] = getimagesize(Storage::disk('public')->path($path));
+    [$w, $h] = getimagesize(Storage::disk('avatars')->path($path));
 
     expect($w)->toBe(256)
         ->and($h)->toBe(256);
