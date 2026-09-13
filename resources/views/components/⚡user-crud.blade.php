@@ -31,6 +31,8 @@ new class extends Component
 
     public function mount()
     {
+        abort_unless(auth()->user()->can('viewAny', User::class), 403);
+
         $this->getUsers();
     }
 
@@ -64,6 +66,7 @@ new class extends Component
         if ($this->isEdit) {
 
             $user = User::findOrFail($this->userId);
+            abort_unless(auth()->user()->can('update', $user), 403);
 
             $data = [
                 'name' => $this->name,
@@ -79,6 +82,8 @@ new class extends Component
             $this->toastSuccess('Success!', 'User updated successfully.');
 
         } else {
+
+            abort_unless(auth()->user()->can('create', User::class), 403);
 
             User::create([
                 'name' => $this->name,
@@ -102,7 +107,10 @@ new class extends Component
 
     public function deleteUser()
     {
-        User::findOrFail($this->deleteId)->delete();
+        $user = User::findOrFail($this->deleteId);
+        abort_unless(auth()->user()->can('delete', $user), 403);
+
+        $user->delete();
 
         $this->deleteId = null;
 

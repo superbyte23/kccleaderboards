@@ -15,6 +15,8 @@ new class extends Component
 
     public function mount(Competition $competition)
     {
+        $this->authorize('view', $competition);
+
         $this->competition = $competition;
         $this->loadScores();
     }
@@ -49,6 +51,8 @@ new class extends Component
 
     public function updateScore($teamId, $newScore)
     {
+        $this->authorize('update', $this->competition);
+
         $newScore = (int)$newScore;
 
         $result = Result::where('team_id', $teamId)

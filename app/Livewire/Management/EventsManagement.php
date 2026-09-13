@@ -29,7 +29,10 @@ class EventsManagement extends Component
 
     public function render()
     {
-        $events = Event::when($this->search, function ($query) {
+        $events = Event::when(! auth()->user()->isAdmin(), function ($query) {
+            $query->where('user_id', auth()->id());
+        })
+        ->when($this->search, function ($query) {
             $query->where('name', 'like', '%' . $this->search . '%')
                   ->orWhere('description', 'like', '%' . $this->search . '%');
         })
@@ -49,14 +52,14 @@ class EventsManagement extends Component
 
     public function openEditModal($id)
     {
-        $event = Event::find($id);
-        if ($event) {
-            $this->editingId = $id;
-            $this->name = $event->name;
-            $this->description = $event->description;
-            $this->event_date = $event->event_date;
-            $this->showModal = true;
-        }
+        $event = Event::findOrFail($id);
+        abort_unless(auth()->user()->can('update', $event), 403);
+
+        $this->editingId = $id;
+        $this->name = $event->name;
+        $this->description = $event->description;
+        $this->event_date = $event->event_date;
+        $this->showModal = true;
     }
 
     public function save()
@@ -64,7 +67,9 @@ class EventsManagement extends Component
         $this->validate();
 
         if ($this->editingId) {
-            $event = Event::find($this->editingId);
+            $event = Event::findOrFail($this->editingId);
+            abort_unless(auth()->user()->can('update', $event), 403);
+
             $event->update([
                 'name' => $this->name,
                 'description' => $this->description,
@@ -73,6 +78,7 @@ class EventsManagement extends Component
             $this->dispatch('notify', message: 'Event updated successfully!', type: 'success');
         } else {
             Event::create([
+                'user_id' => auth()->id(),
                 'name' => $this->name,
                 'description' => $this->description,
                 'event_date' => $this->event_date,
@@ -93,7 +99,10 @@ class EventsManagement extends Component
     public function delete()
     {
         if ($this->deleteId) {
-            Event::destroy($this->deleteId);
+            $event = Event::findOrFail($this->deleteId);
+            abort_unless(auth()->user()->can('delete', $event), 403);
+
+            $event->delete();
             $this->dispatch('notify', message: 'Event deleted successfully!', type: 'success');
             $this->showDeleteConfirm = false;
             $this->deleteId = null;

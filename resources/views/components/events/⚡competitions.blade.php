@@ -22,6 +22,8 @@ new class extends Component {
 
     public function mount(Event $event)
     {
+        $this->authorize('view', $event);
+
         $this->event = $event;
         $this->getEventComps();
         $this->dispatch('refresh-leaderboard');
@@ -64,6 +66,8 @@ new class extends Component {
 
     public function saveComp()
     {
+        $this->authorize('update', $this->event);
+
         $this->validate([
             'name' => 'required|string|max:255',
             'category' => 'required|string',
@@ -118,6 +122,8 @@ new class extends Component {
 
     public function deleteComp()
     {
+        $this->authorize('update', $this->event);
+
         if (!$this->isDeletingComp) {
             $this->toastError('Error!', 'No comp selected');
             return;

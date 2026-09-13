@@ -29,12 +29,14 @@ new class extends Component {
     public function render()
     {
         return $this->view([
-            'events' => Event::when($this->search, function ($query) {
-                $query->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('description', 'like', '%' . $this->search . '%');
-            })
-            ->orderBy('created_at', 'desc')
-            ->paginate(10),
+            'events' => Event::query()
+                ->when(! auth()->user()->isAdmin(), fn ($query) => $query->where('user_id', auth()->id()))
+                ->when($this->search, function ($query) {
+                    $query->where('name', 'like', '%' . $this->search . '%')
+                          ->orWhere('description', 'like', '%' . $this->search . '%');
+                })
+                ->orderBy('created_at', 'desc')
+                ->paginate(10),
         ]);
     }
 
@@ -46,14 +48,14 @@ new class extends Component {
 
     public function openEditModal($id)
     {
-        $event = Event::find($id);
-        if ($event) {
-            $this->editingId = $id;
-            $this->name = $event->name;
-            $this->description = $event->description;
-            $this->event_date = $event->event_date->format('Y-m-d');
-            $this->showModal = true;
-        }
+        $event = Event::findOrFail($id);
+        $this->authorize('update', $event);
+
+        $this->editingId = $id;
+        $this->name = $event->name;
+        $this->description = $event->description;
+        $this->event_date = $event->event_date->format('Y-m-d');
+        $this->showModal = true;
     }
 
     public function save()
@@ -61,7 +63,9 @@ new class extends Component {
         $this->validate();
 
         if ($this->editingId) {
-            $event = Event::find($this->editingId);
+            $event = Event::findOrFail($this->editingId);
+            $this->authorize('update', $event);
+
             $event->update([
                 'name' => $this->name,
                 'description' => $this->description,
@@ -70,6 +74,7 @@ new class extends Component {
             $this->toastSuccess('Success!', 'Event updated successfully!');
         } else {
             Event::create([
+                'user_id' => auth()->id(),
                 'name' => $this->name,
                 'description' => $this->description,
                 'event_date' => $this->event_date,
@@ -90,13 +95,12 @@ new class extends Component {
     public function delete()
     {
         $event = Event::findOrFail($this->deleteId);
-        // dd($event);
-        if ($event) {
-            $event->delete();
-            $this->toastSuccess('Success!', 'Event deleted successfully!');
-            $this->showDeleteConfirm = false;
-            $this->deleteId = null;
-        }
+        $this->authorize('delete', $event);
+
+        $event->delete();
+        $this->toastSuccess('Success!', 'Event deleted successfully!');
+        $this->showDeleteConfirm = false;
+        $this->deleteId = null;
     }
 
     public function closeModal()

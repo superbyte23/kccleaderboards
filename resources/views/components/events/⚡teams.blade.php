@@ -24,6 +24,8 @@ new class extends Component {
 
     public function mount(Event $event)
     {
+        $this->authorize('view', $event);
+
         $this->event = $event;
         $this->getEventTeams(); // Load teams when the component mounts
         
@@ -58,6 +60,8 @@ new class extends Component {
 
     public function saveTeam()
     {
+        $this->authorize('update', $this->event);
+
         $this->validate([
             'name' => 'required|string|max:255',
             'color' => 'required|string|max:7',
@@ -123,6 +127,8 @@ new class extends Component {
 
     public function deleteTeam()
     {
+        $this->authorize('update', $this->event);
+
         if (!$this->isDeletingTeam) {
             $this->toastError('Error!', 'No team selected for deletion.'); 
             return;

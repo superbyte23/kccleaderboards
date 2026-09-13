@@ -15,6 +15,8 @@ new class extends Component
 
     public function mount(Event $event)
     {
+        $this->authorize('view', $event);
+
         $this->event = $event;
         $this->teams = $event->teams()->get();
         $this->competitions = $event->competitions()->get();
