@@ -1,4 +1,4 @@
-import './avatar-upload.js';
+import './avatar-crop.js';
 
 (() => {
     // Constellation / plexus background: drifting gold dots linked into

@@ -231,19 +231,47 @@ new class extends Component
 
                 <flux:field>
                     <flux:label>Team avatar</flux:label>
-                    <input type="file" accept="image/*" x-data x-on:change="window.avatarCompress($event.target.files[0], $wire)" class="block w-full cursor-pointer rounded-xl border border-line bg-canvas-soft text-sm text-zinc-500 file:mr-4 file:border-0 file:bg-gold-400 file:px-4 file:py-2 file:text-sm file:font-bold file:text-gold-950 hover:file:bg-gold-300" />
-                    @error('avatar') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
 
-                    <div wire:loading wire:target="avatar" class="mt-1 text-xs text-gold-300">
-                        Uploading to server...
-                    </div>
+                    <div x-data="avatarCrop()">
+                        <input type="file" accept="image/*" x-ref="file" class="block w-full cursor-pointer rounded-xl border border-line bg-canvas-soft text-sm text-zinc-500 file:mr-4 file:border-0 file:bg-gold-400 file:px-4 file:py-2 file:text-sm file:font-bold file:text-gold-950 hover:file:bg-gold-300" />
 
-                    <div class="mt-2">
-                        @if ($avatar && !is_string($avatar))
-                            <img src="{{ $avatar->temporaryUrl() }}" class="size-16 rounded-xl border border-line object-cover">
-                        @elseif ($isEditingTeam && ($currentTeam = $teams->find($isEditingTeam)) && $currentTeam->avatar)
-                            <img src="{{ asset('storage/' . $currentTeam->avatar) }}" class="size-16 rounded-xl border border-line object-cover">
-                        @endif
+                        @error('avatar') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
+
+                        <div wire:loading wire:target="avatar" class="mt-1 text-xs text-gold-300">
+                            Uploading to server...
+                        </div>
+
+                        <template x-if="loaded">
+                            <div class="mt-2 space-y-2">
+                                <div class="relative select-none touch-none" x-ref="frame">
+                                    <img :src="previewUrl" :style="{ width: displayW + 'px', height: displayH + 'px' }" class="rounded-xl" draggable="false" />
+
+                                    <div :style="boxStyle()" class="absolute top-0 left-0 cursor-move rounded-lg ring-2 ring-gold-400" style="box-shadow: 0 0 0 9999px rgba(0,0,0,0.5)" @pointerdown="startMove($event, 'move')">
+                                        <div class="absolute -bottom-1.5 -right-1.5 size-4 cursor-nwse-resize rounded-sm border-2 border-gold-400 bg-gold-950" @pointerdown.stop="startMove($event, 'resize')"></div>
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-2">
+                                    <flux:button @click="reset()" variant="subtle" size="sm">Cancel</flux:button>
+                                    <flux:button @click="applyCrop()" variant="primary" size="sm">
+                                        <template x-if="busy"><span class="animate-pulse">Cropping…</span></template>
+                                        <template x-if="!busy"><span>Crop &amp; upload</span></template>
+                                    </flux:button>
+                                </div>
+                            </div>
+                        </template>
+
+                        <template x-if="!loaded && uploading">
+                            <div class="mt-2 text-xs text-gold-300 animate-pulse">Compressing & uploading…</div>
+                        </template>
+
+                        <template x-if="!loaded && !uploading">
+                            <div class="mt-2">
+                                @if ($isEditingTeam && ($currentTeam = $teams->find($isEditingTeam)) && $currentTeam->avatar)
+                                    <img src="{{ asset('storage/' . $currentTeam->avatar) }}" class="size-16 rounded-xl border border-line object-cover">
+                                @endif
+                            </div>
+                        </template>
                     </div>
                 </flux:field>
 

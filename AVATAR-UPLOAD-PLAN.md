@@ -1,7 +1,7 @@
 # PLAN — Adaptive Team Avatar Uploads
 
 **Project:** `/var/www/hinugyawintramurals` — Rally leaderboards (Laravel 12 + Livewire + Flux)
-**Status:** Proposed (not yet implemented)
+**Status:** Deployed (v1: client pre-compression) + v2: interactive square crop & instant preview (in progress)
 **Owner:** opencode + user
 Relates to: `OptimizeAvatar` (256×256 webp, quality 82), live host = InfinityFree free tier (no `symlink()`, limited PHP upload caps).
 
@@ -174,9 +174,33 @@ Regression:
 
 ## 10. Acceptance criteria
 
-- [ ] Picking a 12 MB phone photo succeeds end-to-end with no error message.
-- [ ] Oversized / non-image files produce the friendly messages (no raw 2048 text anywhere — remove `max:2048`).
-- [ ] Avatar still renders 256×256 webp; no regression in existing 55 tests.
-- [ ] Portrait photos retain orientation.
-- [ ] No 419 when uploading on live host.
+- [x] Picking a 12 MB phone photo succeeds end-to-end with no error message.
+- [x] Oversized / non-image files produce the friendly messages (no raw 2048 text anywhere — remove `max:2048`).
+- [x] Avatar still renders 256×256 webp; no regression in existing 62 tests.
+- [x] Portrait photos retain orientation.
+- [x] No 419 when uploading on live host.
+
+---
+
+## 11. v2 — Interactive square crop + instant preview
+
+**Motivation (user feedback):** the v1 preview only appeared after the `temporaryUrl()` round-trip (slow on InfinityFree), and avatars are always displayed square (112 px podium, 256 px storage) — a full-frame preview then a surprise server-side crop gave no *choice* of framing.
+
+**Change (in progress):**
+
+- **Instant preview:** `URL.createObjectURL(file)` shows the image locally the moment it's picked — no server round-trip.
+- **Interactive square crop:** new `resources/js/avatar-crop.js` (Alpine data factory `window.avatarCrop()`), imported from `app.js`. A square selection box is overlaid on the preview; drag to move it, grab the corner handle to resize, clamp by pointer events. "Crop & upload" draws the selection to canvas (`drawImage`), downscales to ≤1024 px, encodes webp q0.8 / jpeg q0.85, and hands the File to `$wire.upload('avatar', ...)`.
+- **Graceful degradation:** animated GIFs and undecodable images (HEIC, older browsers) still pass the raw file straight to Livewire, same as v1. WebP capability is probed via `toDataURL`.
+- The old `resources/js/avatar-upload.js` (`window.avatarCompress`) is now dead code — removed from `app.js` import (file left in repo for reference).
+
+**Blade (`⚡teams.blade.php`):** one `div x-data="avatarCrop()"` wraps the file input + crop UI. File input keeps the same visual styling; `x-ref="file"`, `init()` binds the `change` listener. Crop UI (frame + selection box + buttons) appears via `<template x-if="loaded">` while the crop is pending; the clip is drawn outside the box via `box-shadow 0 0 0 9999px rgba(0,0,0,.5)`.
+
+**Pitfalls hit:**
+- Blade compiles `:disabled="busy"` on a `flux:button` as a PHP expression → `Undefined constant "busy"`. Fix: drop the binding (the `applyCrop()` guard already no-ops while busy) — no Livewire binding used.
+
+### 11.1 Browser test additions (manual)
+- Pick a large JPEG → preview appears instantly (no spinner-first).
+- Drag the square / drag the corner handle → box stays clamped inside the image.
+- "Crop & upload" → spinner then save → avatar matches the selected square framing.
+- Animated GIF still uploads as-is; re-edit shows old avatar until replaced.
 ```
