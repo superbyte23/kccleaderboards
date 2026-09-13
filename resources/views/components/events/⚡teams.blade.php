@@ -1,23 +1,33 @@
 <?php
 
-use Livewire\Component;
-use App\Models\Event;
-use Livewire\WithFileUploads;
+use App\Actions\OptimizeAvatar;
 use App\Livewire\Concerns\HasSileoToasts;
+use App\Models\Event;
+use Livewire\Component;
+use Livewire\WithFileUploads;
 
-new class extends Component {
+new class extends Component
+{
     use HasSileoToasts;
     use WithFileUploads;
+
     public Event $event;
+
     public $teams = [];
 
     // fields for team creation/editing
     public $name = '';
+
     public $color = '';
+
     public $avatar = '';
+
     public $represents = null;
+
     public $showTeamModal = false;
+
     public $isEditingTeam = null;
+
     public $isDeletingTeam = null;
 
     public $showDeleteConfirm = false;
@@ -28,7 +38,7 @@ new class extends Component {
 
         $this->event = $event;
         $this->getEventTeams(); // Load teams when the component mounts
-        
+
     }
 
     public function getEventTeams()
@@ -77,7 +87,7 @@ new class extends Component {
 
         // Handle Avatar Upload
         if ($this->avatar) {
-            $data['avatar'] = $this->avatar->store('avatars', 'public');
+            $data['avatar'] = OptimizeAvatar::run($this->avatar);
         }
 
         if ($this->isEditingTeam) {
@@ -103,13 +113,13 @@ new class extends Component {
 
         $this->toastSuccess('Success!', $this->isEditingTeam ? 'Team updated Successfully.' : 'Team created Successfully.');
     }
-    
+
     public function editTeam($teamId)
     {
         $team = $this->event->teams()->find($teamId);
 
         if (! $team) {
-            $this->toastError('Error!', 'Team not found.'); 
+            $this->toastError('Error!', 'Team not found.');
         }
 
         $this->name = $team->name;
@@ -129,8 +139,9 @@ new class extends Component {
     {
         $this->authorize('update', $this->event);
 
-        if (!$this->isDeletingTeam) {
-            $this->toastError('Error!', 'No team selected for deletion.'); 
+        if (! $this->isDeletingTeam) {
+            $this->toastError('Error!', 'No team selected for deletion.');
+
             return;
         }
 
@@ -141,6 +152,7 @@ new class extends Component {
                 'type' => 'error',
                 'message' => 'Team not found.',
             ]);
+
             return;
         }
 
