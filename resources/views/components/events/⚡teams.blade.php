@@ -97,7 +97,7 @@ new class extends Component
 
                 // delete old avatar ONLY if new one uploaded
                 if ($this->avatar && $team->avatar) {
-                    Storage::disk('public')->delete($team->avatar);
+                    OptimizeAvatar::delete($team->avatar);
                 }
 
                 $team->update($data);

@@ -53,7 +53,8 @@ class OptimizeAvatars extends Command
                 DB::table('teams')->where('avatar', $file)->update(['avatar' => $to]);
 
                 $disk->put($to, $payload);
-                $disk->delete($file);
+                OptimizeAvatar::mirror($to, $payload);
+                OptimizeAvatar::delete($file);
 
                 $bytesAfter += strlen($payload);
                 $saved++;
