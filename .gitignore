@@ -21,3 +21,9 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+
+# EnvKit session notes
+.cursor/
+SESSION.md
+.git.corrupt.bak/

@@ -67,14 +67,14 @@ new class extends Component {
                 'description' => $this->description,
                 'event_date' => $this->event_date,
             ]);
-            $this->toastSuccess('notify', 'Event updated successfully!');
+            $this->toastSuccess('Success!', 'Event updated successfully!');
         } else {
             Event::create([
                 'name' => $this->name,
                 'description' => $this->description,
                 'event_date' => $this->event_date,
             ]);
-            $this->toastSuccess('notify', 'Event created successfully!');
+            $this->toastSuccess('Success!', 'Event created successfully!');
         }
 
         $this->resetForm();
@@ -93,7 +93,7 @@ new class extends Component {
         // dd($event);
         if ($event) {
             $event->delete();
-            $this->toastSuccess('notify', 'Event deleted successfully!');
+            $this->toastSuccess('Success!', 'Event deleted successfully!');
             $this->showDeleteConfirm = false;
             $this->deleteId = null;
         }
@@ -119,14 +119,14 @@ new class extends Component {
     }
 }; ?>
 
-<div class="space-y-6">
-    <!-- Header -->
-    <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold">Events Management</h1>
-        <flux:button icon="plus" wire:click="openCreateModal" variant="primary">Create Event</flux:button>
+<div class="mx-auto max-w-7xl space-y-6 p-4 pt-5">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+            <h1 class="font-display text-2xl font-extrabold tracking-tight text-white md:text-4xl">Events management</h1>
+        </div>
+        <flux:button icon="plus" wire:click="openCreateModal" variant="primary">Create event</flux:button>
     </div>
 
-    <!-- Search Bar -->
     <div class="w-full">
         <flux:input
             wire:model.live="search"
@@ -136,91 +136,78 @@ new class extends Component {
         />
     </div>
 
-    <!-- Events Table -->
-    <flux:card>
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="border-b border-gray-200 dark:border-gray-700">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Name</th>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Description</th>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Date</th>
-                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                    @forelse($events as $event)
-                        <tr wire:key="event-{{ $event->id }}" class="hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-                            <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{{ $event->name }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ Str::limit($event->description, 50) }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $event->event_date->format('F m, Y') }}</td>
-                            <td class="px-6 py-4 text-sm space-x-2 flex">
-                                <flux:button
-                                    href="/event-dashboard/{{ $event->id }}"
-                                    wire:navigate
-                                    variant="subtle"
-                                    size="sm"
-                                    icon="eye"
-                                > 
-                                    View Dashboard
-                                </flux:button>
-                                <flux:button
-                                    wire:click="openEditModal('{{ $event->id }}')"
-                                    wire:loading.attr="disabled"
-                                    wire:target="openEditModal"
-                                    variant="subtle"
-                                    size="sm"
-                                    icon="pencil"
-                                > 
-                                    Edit
-                                </flux:button>
-                                <flux:button
-                                    wire:click="confirmDelete('{{ $event->id }}')"
-                                    variant="subtle"
-                                    size="sm"
-                                    class="text-red-600 dark:text-red-400"
-                                    icon="trash"
-                                > 
-                                    Delete
-                                </flux:button>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                                No events found.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        @if($events->count())
-            <div class="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
-                {{ $events->links() }}
+    <div class="space-y-3">
+        @forelse($events as $event)
+            <div wire:key="event-{{ $event->id }}" class="panel p-4">
+                <div class="flex items-center gap-3">
+                    <span class="flex size-9 shrink-0 items-center justify-center rounded-xl border border-line bg-canvas-soft text-gold-300">
+                        <flux:icon name="trophy" class="size-4.5" />
+                    </span>
+                    <div class="min-w-0 flex-1">
+                        <p class="truncate font-semibold text-white">{{ $event->name }}</p>
+                        <p class="truncate text-xs text-zinc-500">{{ Str::limit($event->description, 50) }}</p>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center justify-between gap-3 border-t border-line pt-3">
+                    <span class="font-mono text-xs tabular-nums text-zinc-400">{{ $event->event_date->format('M j, Y') }}</span>
+                    <div class="flex shrink-0 items-center gap-1">
+                        <flux:button
+                            href="/event-dashboard/{{ $event->id }}"
+                            wire:navigate
+                            variant="subtle"
+                            size="sm"
+                            square
+                        >
+                            <x-tabler-icon name="scan-eye" class="size-4 text-gold-300" />
+                        </flux:button>
+                        <flux:button
+                            wire:click="openEditModal('{{ $event->id }}')"
+                            wire:loading.attr="disabled"
+                            wire:target="openEditModal"
+                            variant="ghost"
+                            size="sm"
+                            square
+                        >
+                            <x-tabler-icon name="pencil-cog" class="size-4 text-zinc-300" />
+                        </flux:button>
+                        <flux:button
+                            wire:click="confirmDelete('{{ $event->id }}')"
+                            variant="ghost"
+                            size="sm"
+                            square
+                        >
+                            <x-tabler-icon name="trash-x" class="size-4 text-red-400" />
+                        </flux:button>
+                    </div>
+                </div>
             </div>
-        @endif
-    </flux:card>
+        @empty
+            <div class="panel px-4 py-16 text-center text-zinc-400">No events found.</div>
+        @endforelse
+    </div>
 
-    <!-- Create/Edit Modal -->
-    <flux:modal name="eventModal" wire:model="showModal" class="md:w-96">
+    @if($events->count())
+        <div class="flex justify-center">
+            {{ $events->links() }}
+        </div>
+    @endif
+
+    <flux:modal name="eventModal" wire:model="showModal" flyout position="bottom" class="modal-sheet">
         <div class="space-y-4">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white">
-                {{ $editingId ? 'Edit Event' : 'Create New Event' }}
+            <h2 class="font-display text-2xl font-bold tracking-tight text-white">
+                {{ $editingId ? 'Edit event' : 'Create new event' }}
             </h2>
 
             <div class="space-y-4">
                 <div>
                     <flux:input
                         wire:model="name"
-                        label="Event Name"
+                        label="Event name"
                         placeholder="Enter event name"
                         type="text"
                     />
                     @error('name')
-                        <span class="text-sm text-red-600 dark:text-red-400">{{ $message }}</span>
+                        <span class="text-sm text-red-400">{{ $message }}</span>
                     @enderror
                 </div>
 
@@ -231,42 +218,43 @@ new class extends Component {
                         placeholder="Enter event description"
                     />
                     @error('description')
-                        <span class="text-sm text-red-600 dark:text-red-400">{{ $message }}</span>
+                        <span class="text-sm text-red-400">{{ $message }}</span>
                     @enderror
                 </div>
 
                 <div>
                     <flux:input
                         wire:model="event_date"
-                        label="Event Date"
+                        label="Event date"
                         type="date"
                     />
                     @error('event_date')
-                        <span class="text-sm text-red-600 dark:text-red-400">{{ $message }}</span>
+                        <span class="text-sm text-red-400">{{ $message }}</span>
                     @enderror
                 </div>
             </div>
 
-            <div class="flex gap-3 justify-end border-t border-gray-200 dark:border-gray-700 pt-4">
+            <div class="flex justify-end gap-3 border-t border-line pt-4">
                 <flux:button wire:click="closeModal" variant="subtle">
+                    <x-tabler-icon name="x" class="size-4" />
                     Cancel
                 </flux:button>
                 <flux:button wire:click="save" variant="primary">
+                    <x-tabler-icon name="device-floppy" class="size-4" />
                     {{ $editingId ? 'Update' : 'Create' }}
                 </flux:button>
             </div>
         </div>
     </flux:modal>
 
-    <!-- Delete Confirmation Modal -->
-    <flux:modal name="deleteConfirm" wire:model="showDeleteConfirm" class="md:w-96">
+    <flux:modal name="deleteConfirm" wire:model="showDeleteConfirm" flyout position="bottom" class="modal-sheet">
         <div class="space-y-4">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Confirm Delete</h2>
-            <p class="text-gray-600 dark:text-gray-400">
+            <h2 class="font-display text-2xl font-bold tracking-tight text-white">Confirm delete</h2>
+            <p class="text-zinc-400">
                 Are you sure you want to delete this event? This action cannot be undone.
             </p>
 
-            <div class="flex gap-3 justify-end border-t border-gray-200 dark:border-gray-700 pt-4">
+            <div class="flex justify-end gap-3 border-t border-line pt-4">
                 <flux:button
                     wire:click="$set('showDeleteConfirm', false)"
                     variant="subtle"

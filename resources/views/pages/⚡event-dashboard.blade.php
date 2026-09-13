@@ -23,12 +23,13 @@ new class extends Component
 };
 ?>
 
-<div>
-    <div class="space-y-6"> 
-        <livewire:events.leaderboard :event="$event" /> 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8"> 
-            <livewire:events.teams :event="$event" />
-            <livewire:events.competitions :event="$event" /> 
-        </div> 
-    </div> 
+<div class="mx-auto max-w-7xl space-y-6 p-4 pt-5">
+    <div>
+        <flux:button :href="route('events')" variant="subtle" size="sm" wire:navigate>Back to events</flux:button>
+    </div>
+    <livewire:events.leaderboard :event="$event" />
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <livewire:events.teams :event="$event" />
+        <livewire:events.competitions :event="$event" />
+    </div>
 </div>

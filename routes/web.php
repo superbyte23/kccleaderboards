@@ -4,9 +4,16 @@ use App\Models\Event;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
+    // Events created on this platform — the only live data the landing page shows
+    $events = Event::latest()->withCount('teams', 'competitions')->get();
+
     return view('welcome', [
-        // We use get() to pass a collection of all active events
-        'events' => Event::latest()->get() 
+        'events' => $events,
+        'totals' => [
+            'events' => $events->count(),
+            'teams' => $events->sum('teams_count'),
+            'competitions' => $events->sum('competitions_count'),
+        ],
     ]);
 })->name('home');
 

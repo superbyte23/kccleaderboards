@@ -9,41 +9,203 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Archivo', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-display: 'Barlow Condensed', 'Archivo', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'Space Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
-    --color-zinc-50: #fafafa;
-    --color-zinc-100: #f5f5f5;
-    --color-zinc-200: #e5e5e5;
-    --color-zinc-300: #d4d4d4;
-    --color-zinc-400: #a3a3a3;
-    --color-zinc-500: #737373;
-    --color-zinc-600: #525252;
-    --color-zinc-700: #404040;
-    --color-zinc-800: #262626;
-    --color-zinc-900: #171717;
-    --color-zinc-950: #0a0a0a;
+    /* ── Arena canvas ───────────────────────────────────────────── */
+    --color-canvas: #0a0b0d;
+    --color-canvas-soft: #0e1013;
+    --color-ink: #16181d;
+    --color-ink-soft: #1d2027;
+    --color-line: #232730;
 
-    --color-accent: var(--color-neutral-800);
-    --color-accent-content: var(--color-neutral-800);
-    --color-accent-foreground: var(--color-white);
+    /* ── Gold scale ─────────────────────────────────────────────── */
+    --color-gold-50: #fdf6e3;
+    --color-gold-100: #f9ecc7;
+    --color-gold-200: #f2d98c;
+    --color-gold-300: #ecc65c;
+    --color-gold-400: #e5b64b;
+    --color-gold-500: #d99e2b;
+    --color-gold-600: #b97c16;
+    --color-gold-700: #8f5c12;
+    --color-gold-800: #5f3d0f;
+    --color-gold-900: #3a2508;
+    --color-gold-950: #221606;
+
+    /* ── Flux semantic accent ───────────────────────────────────── */
+    --color-accent: var(--color-gold-400);
+    --color-accent-content: var(--color-gold-300);
+    --color-accent-foreground: var(--color-gold-950);
+
+    --shadow-gold: 0 0 0 1px rgb(229 182 75 / 0.25), 0 12px 40px -12px rgb(229 182 75 / 0.25);
 }
 
 @layer theme {
     .dark {
-        --color-accent: var(--color-white);
-        --color-accent-content: var(--color-white);
-        --color-accent-foreground: var(--color-neutral-800);
+        --color-accent: var(--color-gold-400);
+        --color-accent-content: var(--color-gold-300);
+        --color-accent-foreground: var(--color-gold-950);
     }
 }
 
 @layer base {
+    html {
+        color-scheme: dark;
+    }
+
+    body {
+        @apply bg-canvas text-zinc-100 antialiased;
+    }
+
+    ::selection {
+        background-color: rgb(229 182 75 / 0.25);
+        color: #fff;
+    }
+
+    h1, h2, h3, h4 {
+        @apply font-display font-bold tracking-tight text-white;
+    }
 
     *,
     ::after,
     ::before,
     ::backdrop,
     ::file-selector-button {
-        border-color: var(--color-gray-200, currentColor);
+        border-color: var(--color-line, currentColor);
+    }
+
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--color-canvas);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #2a2e37;
+        border: 2px solid var(--color-canvas);
+        border-radius: 999px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #3a3f4b;
+    }
+
+    :focus-visible {
+        outline: 2px solid rgb(229 182 75 / 0.7);
+        outline-offset: 2px;
+    }
+}
+
+@layer components {
+    [x-cloak] {
+        display: none !important;
+    }
+
+    /* Raised panel surface used across cards and tables */
+    .panel {
+        @apply rounded-2xl border border-line bg-ink;
+    }
+
+    /* Subtle film grain to break digital flatness */
+    .grain::before {
+        content: "";
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        opacity: 0.035;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* Scoreboard numeral treatment */
+    .tabular-nums {
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Gold-gradient hairline behind display headlines */
+    .display-rule {
+        height: 1px;
+        background: linear-gradient(90deg, rgb(229 182 75 / 0.6), transparent);
+    }
+
+    /* Gentle hover for floating podium avatars */
+    @keyframes float-y {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    .animate-float {
+        animation: float-y 5s ease-in-out infinite;
+    }
+    @keyframes shadow-pulse {
+        0%, 100% { transform: scaleX(1); opacity: 0.55; }
+        50% { transform: scaleX(0.72); opacity: 0.3; }
+    }
+    .animate-shadow-pulse {
+        animation: shadow-pulse 5s ease-in-out infinite;
+    }
+
+    /* ── Game-website motion: welcome page ─────────────────────── */
+    @keyframes drift {
+        from { transform: translate3d(-5%, -3%, 0) scale(1); }
+        to { transform: translate3d(5%, 4%, 0) scale(1.1); }
+    }
+    .animate-drift {
+        animation: drift 16s ease-in-out infinite alternate;
+    }
+    @keyframes marquee {
+        to { transform: translateX(-50%); }
+    }
+    .animate-marquee {
+        animation: marquee 26s linear infinite;
+    }
+    @keyframes rise {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-rise {
+        animation: rise 0.7s cubic-bezier(0.22, 0.68, 0.32, 1) both;
+    }
+    @keyframes grid-pan {
+        from { background-position: 0 0; }
+        to { background-position: 44px 44px; }
+    }
+    .animate-grid-pan {
+        animation: grid-pan 14s linear infinite;
+    }
+    @keyframes shine {
+        0% { transform: translateX(-130%); }
+        55%, 100% { transform: translateX(130%); }
+    }
+    .btn-shine {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+    }
+    .btn-shine::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        background: linear-gradient(105deg, transparent 42%, rgb(255 255 255 / 0.45) 50%, transparent 58%);
+        transform: translateX(-130%);
+        animation: shine 3.4s ease-in-out infinite;
+        pointer-events: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-drift,
+    .animate-marquee,
+    .animate-grid-pan,
+    .animate-rise,
+    .animate-float,
+    .animate-shadow-pulse,
+    .btn-shine::after {
+        animation: none !important;
     }
 }
 
@@ -52,7 +214,7 @@
 }
 
 [data-flux-label] {
-    @apply  !mb-0 !leading-tight;
+    @apply !mb-0 !leading-tight;
 }
 
 input:focus[data-flux-control],
@@ -61,7 +223,19 @@ select:focus[data-flux-control] {
     @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
 }
 
-/* \[:where(&)\]:size-4 {
-    @apply size-4;
-} */
+/* Override Flux main component padding */
+[data-flux-main] {
+    padding: 0 !important;
+}
 
+/* Bottom sheet on mobile, centered modal on desktop */
+@media (min-width: 768px) {
+    dialog[data-flux-flyout].modal-sheet {
+        margin: auto;
+        min-width: 0;
+        width: min(28rem, calc(100vw - 2rem));
+        max-height: calc(100dvh - 4rem);
+        border: 1px solid var(--color-line);
+        border-radius: 1rem;
+    }
+}

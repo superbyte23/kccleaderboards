@@ -32,7 +32,7 @@ new class extends Component {
         $this->competitions = $this->event
             ->competitions()
             ->with(['results.team']) // Eager load to avoid N+1 issues
-            ->orderBy('created_at', 'desc')
+            ->latest()
             ->get()
             ->map(function ($comp) {
                 // Find the result with the highest score for this specific competition
@@ -135,64 +135,71 @@ new class extends Component {
 ?>
 
 <div>
-    <section class="space-y-4">
-        <div class="flex items-center justify-between">
-            <flux:heading size="xl">Competitions</flux:heading>
-            <flux:button wire:click="openCompModal" wire:loading.attr="disabled" wire:target="openCompModal" icon="plus">
-                Add Competition</flux:button>
+    <section>
+        <div class="sticky top-0 z-20 -mx-1 mb-3 flex items-center justify-between gap-3 border-b border-line bg-canvas px-1 py-2">
+            <h2 class="font-display text-xl font-bold tracking-tight text-white">Competitions</h2>
+            <flux:button wire:click="openCompModal" wire:loading.attr="disabled" wire:target="openCompModal" icon="plus" size="sm" variant="primary">Add competition</flux:button>
         </div>
 
-        <flux:card class="overflow-x-auto">
-            <flux:table class="max-h-80">
-                <flux:table.columns sticky>
-                    <flux:table.column>Activity</flux:table.column>
-                    <flux:table.column>Category</flux:table.column>
-                    <flux:table.column>Winner</flux:table.column>
-                    <flux:table.column></flux:table.column>
-                </flux:table.columns>
-                <flux:table.rows>
-                    @foreach ($competitions as $comp)
-                        <flux:table.row wire:key="comp-{{ $comp->id }}">
-                            <flux:table.cell font="medium">{{ $comp->name }}</flux:table.cell>
-                            <flux:table.cell>{{ $comp->category }}</flux:table.cell>
-                            <flux:table.cell>
-                                @if ($comp->winner_name !== 'No winner yet')
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-2 h-2 rounded-full"
-                                            style="background-color: {{ $comp->winner_color ?? '#64748b' }}"></div>
-                                        <span class="font-semibold">{{ $comp->winner_name }}</span>
-                                    </div>
-                                @else
-                                    <flux:badge size="sm" variant="subtle">Pending</flux:badge>
-                                @endif
-                            </flux:table.cell>
-                            <flux:table.cell>
-                                <flux:button 
-                                    :href="route('competition-dashboard', $comp)" 
-                                    icon="eye"
-                                    variant="ghost" wire:navigate /> 
-                                <flux:button 
-                                    wire:click="editComp('{{ $comp->id }}')" 
-                                    wire:loading.attr="disabled"
-                                    wire:target="editComp('{{ $comp->id }}')"
-                                    icon="pencil-square" variant="ghost" />
-                                <flux:button 
-                                    wire:click="confirmDeleteComp('{{ $comp->id }}')"
-                                    wire:loading.attr="disabled" 
-                                    wire:target="confirmDeleteComp('{{ $comp->id }}')"
-                                    icon="trash" variant="ghost" /> 
-                            </flux:table.cell>
-                        </flux:table.row>
-                    @endforeach
-                </flux:table.rows>
-            </flux:table>
-        </flux:card>
+        <div class="space-y-2">
+            @forelse ($competitions as $comp)
+                <div wire:key="comp-{{ $comp->id }}" class="rounded-xl border border-line bg-canvas-soft p-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <span class="rounded-full bg-gold-400/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-gold-300 ring-1 ring-gold-400/20">{{ $comp->category }}</span>
+                        <div class="flex shrink-0 items-center gap-1">
+                            <flux:button
+                                :href="route('competition-dashboard', $comp)"
+                                variant="subtle"
+                                size="sm"
+                                square
+                                wire:navigate
+                            >
+                                <x-tabler-icon name="scan-eye" class="size-4 text-gold-300" />
+                            </flux:button>
+                            <flux:button
+                                wire:click="editComp('{{ $comp->id }}')"
+                                wire:loading.attr="disabled"
+                                wire:target="editComp"
+                                variant="ghost"
+                                size="sm"
+                                square
+                            >
+                                <x-tabler-icon name="pencil-cog" class="size-4 text-zinc-300" />
+                            </flux:button>
+                            <flux:button
+                                wire:click="confirmDeleteComp('{{ $comp->id }}')"
+                                wire:loading.attr="disabled"
+                                wire:target="confirmDeleteComp"
+                                variant="ghost"
+                                size="sm"
+                                square
+                            >
+                                <x-tabler-icon name="trash-x" class="size-4 text-red-400" />
+                            </flux:button>
+                        </div>
+                    </div>
+                    <p class="mt-2 truncate font-semibold text-white">{{ $comp->name }}</p>
+                    <div class="mt-2 flex items-center gap-2 pt-1">
+                        <p class="shrink-0 text-[10px] font-bold uppercase tracking-widest text-zinc-500">Winner</p>
+                        @if ($comp->winner_name !== 'No winner yet')
+                            <p class="min-w-0 flex-1 truncate text-right text-sm font-semibold text-white">{{ $comp->winner_name }}</p>
+                        @else
+                            <div class="flex-1 text-right">
+                                <flux:badge size="sm" variant="subtle">Pending</flux:badge>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @empty
+                <div class="py-12 text-center text-sm text-zinc-400">No competitions yet. Add your first one.</div>
+            @endforelse
+        </div>
     </section>
 
-
-    <flux:modal wire:model.self="showCompModal" class="md:w-96">
+    <flux:modal wire:model.self="showCompModal" flyout position="bottom" class="modal-sheet">
         <form wire:submit="saveComp">
             <div class="space-y-6">
+                <flux:heading size="lg" class="font-display font-bold tracking-tight text-white">{{ $isEditingComp ? 'Edit competition' : 'Add competition' }}</flux:heading>
                 <flux:input label="Name" wire:model="name" />
                 <flux:select label="Category" wire:model="category">
                     <option value="">Select a category</option>
@@ -201,28 +208,31 @@ new class extends Component {
                     <option value="Academic">Academic</option>
                     <option value="Creative Arts">Creative Arts</option>
                     <option value="Science and Tech">Science and Tech</option>
-                    <option value="Literary">Literary</option>
-                    <option value="Speech and Media Arts">Speech and Media Arts</option>
-                    <option value="Attendance">Attendance</option>
                 </flux:select>
-                <div class="flex gap-2 justify-end">
+                <div class="flex justify-end gap-2">
                     <flux:spacer />
-                    <flux:button type="button" wire:click="closeCompModal" variant="subtle">Cancel</flux:button>
-                    <flux:button type="submit" variant="primary">Save</flux:button>
+                    <flux:button type="button" wire:click="closeCompModal" variant="subtle">
+                        <x-tabler-icon name="x" class="size-4" />
+                        Cancel
+                    </flux:button>
+                    <flux:button type="submit" variant="primary">
+                        <x-tabler-icon name="device-floppy" class="size-4" />
+                        Save
+                    </flux:button>
                 </div>
             </div>
         </form>
     </flux:modal>
 
-    <flux:modal wire:model.self="showDeleteConfirm" class="min-w-[22rem]">
+    <flux:modal wire:model.self="showDeleteConfirm" flyout position="bottom" class="modal-sheet">
         <form wire:submit.prevent="deleteComp">
             <div class="space-y-6">
-                <flux:heading size="lg">Delete Competition</flux:heading>
-                <flux:text>You&rsquo;re about to delete this competition. This action cannot be reversed.</flux:text>
+                <flux:heading size="lg" class="font-display font-bold tracking-tight text-white">Delete competition</flux:heading>
+                <flux:text>You're about to delete this competition. This action cannot be reversed.</flux:text>
                 <div class="flex gap-2">
                     <flux:spacer />
                     <flux:modal.close>
-                        <flux:button>Cancel</flux:button>
+                        <flux:button variant="subtle">Cancel</flux:button>
                     </flux:modal.close>
                     <flux:button type="submit" variant="danger">Delete</flux:button>
                 </div>

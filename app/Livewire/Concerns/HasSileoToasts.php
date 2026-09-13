@@ -29,7 +29,7 @@ trait HasSileoToasts
         string  $type,
         string  $title,
         string  $description = '',
-        int     $duration = 4000,
+        int $duration = 2500,
         ?string $position = null,
         ?array  $action = null,
     ): void {

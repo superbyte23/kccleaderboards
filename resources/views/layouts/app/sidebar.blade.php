@@ -3,19 +3,19 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+    <body class="min-h-screen bg-canvas text-zinc-100">
+        <flux:sidebar sticky collapsible="mobile" class="border-e border-line bg-canvas-soft">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
                 <flux:sidebar.collapse class="lg:hidden" />
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')" class="grid">
-                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
+                <flux:sidebar.group :heading="__('Rally')" class="grid">
+                    <flux:sidebar.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
-                    <flux:sidebar.item icon="home" :href="route('events')" :current="request()->routeIs('events')" wire:navigate>
+                    <flux:sidebar.item icon="trophy" :href="route('events')" :current="request()->routeIs('events')" wire:navigate>
                         {{ __('Events') }}
                     </flux:sidebar.item>
                     <flux:sidebar.item icon="users" :href="route('users')" :current="request()->routeIs('users')" wire:navigate>
@@ -24,13 +24,21 @@
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 
-            <flux:spacer /> 
+            <div class="px-3 py-4 mt-6 rounded-xl bg-ink border border-line">
+                <div class="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-gold-300">
+                    <span class="size-1.5 rounded-full bg-gold-400 animate-pulse"></span>
+                    Rally
+                </div>
+                <p class="mt-1 text-xs text-zinc-500">Live event scoring</p>
+            </div>
+
+            <flux:spacer />
 
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>
 
         <!-- Mobile User Menu -->
-        <flux:header class="lg:hidden">
+        <flux:header class="lg:hidden bg-canvas-soft border-b border-line">
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
             <flux:spacer />
@@ -87,7 +95,7 @@
         {{ $slot }}
 
         @fluxScripts
-        
-    <livewire:sileo-toaster />
+
+        <livewire:sileo-toaster position="top-center" />
     </body>
 </html>

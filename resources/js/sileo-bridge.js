@@ -8,23 +8,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const position = root.dataset.position ?? 'top-right'
 
-    // Sileo inverts by design — dark page = light toast, light page = dark toast
-    const isDark = document.documentElement.classList.contains('dark')
-
+    // Dark toasts to match the arena theme
     const options = {
-        fill: isDark ? "#ffffff" : "#171717",
+        fill: "#171717",
         roundness: 16,
         styles: {
             title: "font-medium",
-            // title:       isDark ? "text-neutral-900!"                       : "text-white!",
-            description: isDark ? "text-neutral-500!"                       : "text-white/75!",
-            badge:       isDark ? "bg-neutral-100!"                         : "bg-white/10!",
-            button:      isDark ? "bg-neutral-100! hover:bg-neutral-200!"   : "bg-white/10! hover:bg-white/15!",
+            description: "text-white/75!",
+            badge: "bg-white/10!",
+            button: "bg-white/10! hover:bg-white/15!",
         },
     }
 
     createRoot(root).render(
-        React.createElement(Toaster, { position, options })
+        React.createElement(Toaster, { position, theme: 'dark', options })
     )
 
     // ── Event listeners ────────────────────────────────────────────────
