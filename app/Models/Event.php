@@ -12,6 +12,7 @@ class Event extends Model
 
     // fillable properties
     protected $fillable = [
+        'user_id',
         'name',
         'description',
         'event_date',
@@ -38,6 +39,11 @@ class Event extends Model
     }
 
     // relationships
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function competitions()
     {        
         return $this->hasMany(Competition::class);
