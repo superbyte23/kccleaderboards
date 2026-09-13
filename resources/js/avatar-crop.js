@@ -75,6 +75,19 @@
             init() {
                 this.$el.querySelector('input[type="file"]')
                     ?.addEventListener('change', (e) => this.onFile(e));
+
+                // Flux modals render as native <dialog> (browser "top layer",
+                // above everything with a z-index). Our crop dialog must be a
+                // native <dialog> too so it can stack above the team modal.
+                this.$watch('cropModal', (open) => {
+                    const d = this.$refs.cropDialog;
+                    if (!d) return;
+                    if (open) {
+                        if (!d.open) d.showModal();
+                    } else if (d.open) {
+                        d.close();
+                    }
+                });
             },
 
             reset() {

@@ -253,10 +253,11 @@ new class extends Component
                             </div>
                         </template>
 
-                        <!-- Crop modal (teleported to body to escape the flyout's transform) -->
+                        <!-- Crop modal: native <dialog> so it stacks ABOVE the
+                             Flux team modal (both live in the browser's top layer) -->
                         <template x-teleport="body">
-                            <div x-show="cropModal" x-cloak x-transition.opacity class="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4">
-                                <div class="w-full max-w-lg rounded-2xl border border-line bg-canvas p-5 shadow-2xl">
+                            <dialog x-ref="cropDialog" class="m-auto w-[min(100vw-2rem,32rem)] border-0 bg-transparent p-2 backdrop:bg-black/70" style="max-width: none" @click.self="cropModal = false" @close="cropModal = false">
+                                <div class="w-full max-w-lg rounded-2xl border border-line bg-canvas p-5 shadow-2xl" @click.stop>
                                     <div class="mb-4 flex items-center justify-between">
                                         <h3 class="font-display text-lg font-bold tracking-tight text-white">Crop to square</h3>
                                         <flux:button variant="subtle" size="sm" @click="reset()">
@@ -282,7 +283,7 @@ new class extends Component
                                         </flux:button>
                                     </div>
                                 </div>
-                            </div>
+                            </dialog>
                         </template>
                     </div>
                 </flux:field>
