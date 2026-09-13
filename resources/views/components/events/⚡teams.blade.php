@@ -241,35 +241,47 @@ new class extends Component
                             Uploading to server...
                         </div>
 
-                        <template x-if="loaded">
-                            <div class="mt-2 space-y-2">
-                                <div class="relative select-none touch-none" x-ref="frame">
-                                    <img :src="previewUrl" :style="{ width: displayW + 'px', height: displayH + 'px' }" class="rounded-xl" draggable="false" />
-
-                                    <div :style="boxStyle()" class="absolute top-0 left-0 cursor-move rounded-lg ring-2 ring-gold-400" style="box-shadow: 0 0 0 9999px rgba(0,0,0,0.5)" @pointerdown="startMove($event, 'move')">
-                                        <div class="absolute -bottom-1.5 -right-1.5 size-4 cursor-nwse-resize rounded-sm border-2 border-gold-400 bg-gold-950" @pointerdown.stop="startMove($event, 'resize')"></div>
-                                    </div>
-                                </div>
-
-                                <div class="flex gap-2">
-                                    <flux:button @click="reset()" variant="subtle" size="sm">Cancel</flux:button>
-                                    <flux:button @click="applyCrop()" variant="primary" size="sm">
-                                        <template x-if="busy"><span class="animate-pulse">Cropping…</span></template>
-                                        <template x-if="!busy"><span>Crop &amp; upload</span></template>
-                                    </flux:button>
-                                </div>
-                            </div>
-                        </template>
-
-                        <template x-if="!loaded && uploading">
+                        <template x-if="uploading">
                             <div class="mt-2 text-xs text-gold-300 animate-pulse">Compressing & uploading…</div>
                         </template>
 
-                        <template x-if="!loaded && !uploading">
+                        <template x-if="!uploading">
                             <div class="mt-2">
                                 @if ($isEditingTeam && ($currentTeam = $teams->find($isEditingTeam)) && $currentTeam->avatar)
                                     <img src="{{ asset('storage/' . $currentTeam->avatar) }}" class="size-16 rounded-xl border border-line object-cover">
                                 @endif
+                            </div>
+                        </template>
+
+                        <!-- Crop modal (teleported to body to escape the flyout's transform) -->
+                        <template x-teleport="body">
+                            <div x-show="cropModal" x-cloak x-transition.opacity class="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4">
+                                <div class="w-full max-w-lg rounded-2xl border border-line bg-canvas p-5 shadow-2xl">
+                                    <div class="mb-4 flex items-center justify-between">
+                                        <h3 class="font-display text-lg font-bold tracking-tight text-white">Crop to square</h3>
+                                        <flux:button variant="subtle" size="sm" @click="reset()">
+                                            <x-tabler-icon name="x" class="size-4" />
+                                        </flux:button>
+                                    </div>
+
+                                    <div class="relative w-full select-none touch-none overflow-hidden rounded-xl bg-black/40" x-ref="frame">
+                                        <img :src="previewUrl" :style="{ width: displayW + 'px', height: displayH + 'px' }" class="block max-w-none" draggable="false" />
+
+                                        <div :style="boxStyle()" class="absolute top-0 left-0 cursor-move rounded-lg ring-2 ring-gold-400" style="box-shadow: 0 0 0 9999px rgba(0,0,0,0.5)" @pointerdown="startMove($event, 'move')">
+                                            <div class="absolute -bottom-1.5 -right-1.5 size-4 cursor-nwse-resize rounded-sm border-2 border-gold-400 bg-gold-950" @pointerdown.stop="startMove($event, 'resize')"></div>
+                                        </div>
+                                    </div>
+
+                                    <p class="mt-3 text-center text-xs text-zinc-400">Drag to move the square. Grab the corner handle to resize.</p>
+
+                                    <div class="mt-4 flex justify-end gap-2">
+                                        <flux:button @click="reset()" variant="subtle">Cancel</flux:button>
+                                        <flux:button @click="applyCrop()" variant="primary">
+                                            <template x-if="busy"><span class="animate-pulse">Cropping…</span></template>
+                                            <template x-if="!busy"><span class="inline-flex items-center gap-1.5"><x-tabler-icon name="crop" class="size-4" />Crop &amp; upload</span></template>
+                                        </flux:button>
+                                    </div>
+                                </div>
                             </div>
                         </template>
                     </div>

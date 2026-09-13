@@ -60,6 +60,7 @@
             previewUrl: '',
             image: null, // loaded <img> DOM node
             loaded: false,
+            cropModal: false,
             busy: false,
             error: '',
             uploading: false,
@@ -82,6 +83,7 @@
                 this.previewUrl = '';
                 this.image = null;
                 this.loaded = false;
+                this.cropModal = false;
                 this.busy = false;
                 this.error = '';
                 this.$refs.file.value = '';
@@ -107,8 +109,9 @@
                 const img = new Image();
                 img.onload = () => {
                     this.image = img;
-                    this.layoutBox();
                     this.loaded = true;
+                    this.cropModal = true;
+                    this.$nextTick(() => this.layoutBox());
                 };
                 img.onerror = () => this.passThrough(file, 'preview failed');
                 img.src = this.previewUrl;
@@ -117,8 +120,9 @@
             layoutBox() {
                 const img = this.image;
                 if (!img) return;
-                const maxW = this.$refs.frame ? this.$refs.frame.clientWidth : 320;
-                const maxH = 280;
+                const pad = 8; // frame padding, px
+                const maxW = Math.max(160, (this.$refs.frame ? this.$refs.frame.clientWidth : 320) - pad);
+                const maxH = 320; // crop dialog height cap keeps it compact
                 const dprW = Math.min(1, maxW / img.naturalWidth);
                 const dprH = Math.min(1, maxH / img.naturalHeight);
                 const dpr = Math.min(dprW, dprH);
@@ -206,16 +210,19 @@
                 if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
                 this.previewUrl = '';
                 this.loaded = false;
+                this.cropModal = false;
                 this.startUpload(file);
             },
 
             startUpload(file) {
                 this.uploading = true;
+                this.cropModal = false;
                 const done = () => {
                     this.uploading = false;
                     if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
                     this.previewUrl = '';
                     this.loaded = false;
+                    if (this.$refs.file) this.$refs.file.value = '';
                 };
                 this.$wire.upload('avatar', file, done, done, () => {});
             },

@@ -190,6 +190,7 @@ Regression:
 
 - **Instant preview:** `URL.createObjectURL(file)` shows the image locally the moment it's picked — no server round-trip.
 - **Interactive square crop:** new `resources/js/avatar-crop.js` (Alpine data factory `window.avatarCrop()`), imported from `app.js`. A square selection box is overlaid on the preview; drag to move it, grab the corner handle to resize, clamp by pointer events. "Crop & upload" draws the selection to canvas (`drawImage`), downscales to ≤1024 px, encodes webp q0.8 / jpeg q0.85, and hands the File to `$wire.upload('avatar', ...)`.
+- **Crop lives in its own modal:** picking a decodable photo opens a separate crop dialog (`x-teleport="body"` + `x-show="cropModal"`, `z-[60]`) so it never fights the team modal for space; teleport escapes the flyout modal's transform. The avatar field keeps just the file input, upload spinner, and existing-thumbnail preview.
 - **Graceful degradation:** animated GIFs and undecodable images (HEIC, older browsers) still pass the raw file straight to Livewire, same as v1. WebP capability is probed via `toDataURL`.
 - The old `resources/js/avatar-upload.js` (`window.avatarCompress`) is now dead code — removed from `app.js` import (file left in repo for reference).
 
@@ -199,8 +200,9 @@ Regression:
 - Blade compiles `:disabled="busy"` on a `flux:button` as a PHP expression → `Undefined constant "busy"`. Fix: drop the binding (the `applyCrop()` guard already no-ops while busy) — no Livewire binding used.
 
 ### 11.1 Browser test additions (manual)
-- Pick a large JPEG → preview appears instantly (no spinner-first).
+- Pick a large JPEG → crop modal opens instantly (no spinner-first); the team modal stays behind it.
 - Drag the square / drag the corner handle → box stays clamped inside the image.
-- "Crop & upload" → spinner then save → avatar matches the selected square framing.
+- "Crop & upload" → modal closes, spinner shows, save → avatar matches the selected square framing.
+- Cancel in crop modal → modal closes, no upload, previous avatar untouched.
 - Animated GIF still uploads as-is; re-edit shows old avatar until replaced.
 ```
